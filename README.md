@@ -1,6 +1,6 @@
 # fabric-governance-monitoring
 
-> **Monitoring, gouvernance et partage de données avec Microsoft Fabric & Power BI**
+> **Monitoring et gouvernance Microsoft Fabric & Power BI**
 > Scripts PowerShell + modèles sémantiques PBIP prêts à déployer
 
 [![Fabric](https://img.shields.io/badge/Microsoft%20Fabric-F2C811?style=flat&logo=microsoftpowerbi&logoColor=black)](https://aka.ms/fabric)
@@ -12,14 +12,15 @@
 
 ## 🎯 Vue d'ensemble
 
-Ce repository regroupe **trois solutions de monitoring et gouvernance** pour les environnements Microsoft Fabric / Power BI, ainsi qu'un **PoC de partage de données inter-domaines** avec Row-Level Security.
+Ce repository regroupe **trois solutions de monitoring et gouvernance** pour les environnements Microsoft Fabric / Power BI.
 
 | Solution | Description | Données collectées |
 |----------|-------------|-------------------|
 | 📊 **Fabric Monitoring** | Supervision des capacités et workspaces Fabric | Activités, capacités, workspaces, refreshables |
 | 🔍 **API Monitoring** | Audit des appels à l'API Power BI | Events d'activité, connexions, datasets |
 | 🌐 **Graph Monitoring** | Surveillance des usages Microsoft Graph | Users, sign-ins, service principals, activity logs |
-| 🏦 **Banking/Insurance PoC** | Partage inter-domaines avec RLS Fabric | Démonstration cloisonnement Banking × Insurance |
+
+> 🏦 **PoC Banking × Insurance (RLS inter-domaines)** → projet séparé : [fabric-crossdomain-rls-poc](https://github.com/JulienPIERRE94/fabric-crossdomain-rls-poc)
 
 ---
 
@@ -71,27 +72,6 @@ Ce repository regroupe **trois solutions de monitoring et gouvernance** pour les
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Architecture PoC Banking × Insurance (RLS inter-domaines)
-
-```
-Workspace WS-Banking                    Workspace WS-Insurance
-══════════════════════════              ══════════════════════════════════
- Lakehouse_Banking                       Lakehouse_Insurance
-  ├─ dim_customers       ──Shortcut──►   sc_dim_customers
-  ├─ fact_bank_accounts  ──Shortcut──►   sc_fact_bank_accounts
-  └─ bridge_ins_customers──Shortcut──►   sc_bridge_ins_customers
-                                          ├─ insurance_contracts
-                                          ├─ insurance_claims
-                                          ├─ security_table
-                                          └─ SEM_Insurance
-                                               ├─ Rôle: BankingAdvisor (RLS)
-                                               └─ Rôle: InsuranceUser  (RLS)
-
-✅ Les données restent physiquement dans WS-Banking (pas de copie).
-✅ Les shortcuts OneLake évitent toute duplication.
-✅ Le RLS est appliqué côté Insurance uniquement.
-```
-
 ### Schéma étoile — PowerBI_Graph_Monitoring
 
 ```
@@ -128,11 +108,8 @@ fabric-governance-monitoring/
 │   │   ├── New-GraphMonitoringServicePrincipal.ps1
 │   │   ├── Export-GraphMetrics.ps1
 │   │   └── Export-GraphActivityLogs.ps1
-│   ├── fabric/                        # Déploiement et monitoring Fabric
-│   │   ├── Deploy-FabricBankingDemo.ps1
+│   ├── fabric/                        # Monitoring Fabric
 │   │   ├── Export-FabricMetrics.ps1
-│   │   ├── Create-OneLakeShortcuts.ps1
-│   │   ├── Assign-RLSMembers.ps1
 │   │   └── ...
 │   ├── audit/                         # Audit Power BI
 │   │   ├── New-PowerBIAuditServicePrincipal.ps1
@@ -174,7 +151,6 @@ fabric-governance-monitoring/
 | **Graph Monitoring** | `User.Read.All`, `AuditLog.Read.All`, `Directory.Read.All`, `Application.Read.All` |
 | **Fabric Monitoring** | Rôle **Fabric Admin** ou **Capacity Admin** |
 | **API Monitoring** | Rôle **Power BI Admin** + groupe de sécurité dans le portail admin |
-| **Banking/Insurance PoC** | Admin sur les workspaces Fabric + droits de création |
 
 > ⚠️ **Entra ID P1/P2 requis** pour collecter les Sign-In Logs.
 > Sans cette licence, `graph_signins.csv` reste vide mais le modèle fonctionne normalement.
@@ -254,41 +230,6 @@ Start-Process .\powerbi\api-monitoring\PowerBI_API_Monitoring.pbip
 
 ---
 
-### 🏦 PoC Banking × Insurance
-
-```powershell
-# 1. S'authentifier
-az login
-
-# 2. Déployer workspaces, lakehouses et données
-.\scripts\fabric\Deploy-FabricBankingDemo.ps1
-
-# 3. Exécuter les notebooks Fabric (chargement Delta)
-.\scripts\fabric\Run-FabricNotebooks.ps1
-
-# 4. Créer les shortcuts OneLake (Banking → Insurance)
-.\scripts\fabric\Create-OneLakeShortcuts.ps1
-
-# 5. Créer le modèle sémantique + rôles RLS
-.\scripts\fabric\Create-SemanticModel.ps1
-
-# 6. Assigner les membres aux rôles
-.\scripts\fabric\Assign-RLSMembers.ps1
-
-# 7. Vérifier
-.\scripts\fabric\Verify-SMRoles.ps1
-```
-
-#### Comptes de test
-
-| Compte | Rôle RLS | Ce qu'il voit |
-|--------|----------|---------------|
-| `hugo.lambert@tenant` | `BankingAdvisor` | Ses clients + leurs contrats assurance si consentement |
-| `isabelle.fontaine@tenant` | `BankingAdvisor` | Ses clients uniquement |
-| `sophie.marchand@tenant` | `InsuranceUser` | Clients consentants — **jamais** les données bancaires |
-
----
-
 ## ⚙️ Paramètre DataFolder
 
 Chaque modèle sémantique expose un paramètre `DataFolder` pointant vers les CSV.
@@ -312,7 +253,6 @@ Chaque modèle sémantique expose un paramètre `DataFolder` pointant vers les C
 
 | Document | Description |
 |----------|-------------|
-| [Architecture Banking/Insurance](docs/Architecture_Fabric_Banking_Insurance_Demo.md) | Architecture complète du PoC RLS |
 | [Architecture Graph Monitoring](docs/Architecture_GraphAPI_Monitoring.md) | Architecture monitoring Graph API |
 | [Mode opératoire Graph API](docs/Mode_Operatoire_Graph_API.md) | Guide pas-à-pas |
 | [Demo Monitoring API Fabric](docs/Demo_Monitoring_API_PowerBI_Fabric.md) | Guide démo |
@@ -325,7 +265,6 @@ Chaque modèle sémantique expose un paramètre `DataFolder` pointant vers les C
 - Le dossier `secrets/` est **gitignored** — ne jamais committer de credentials
 - Les Service Principals utilisent des secrets avec expiration (2 ans par défaut)
 - Les permissions sont **Application-level** (pas delegated) pour les scripts automatisés
-- Les rôles RLS sont définis en DAX dans les modèles sémantiques Fabric
 
 ---
 
