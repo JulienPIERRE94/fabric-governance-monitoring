@@ -8,7 +8,9 @@ secrets/
 *.credentials.json
 *.token
 *.key
-
+# ── Docs contenant des comptes / mots de passe ─────────────────────────────────
+docs/Comptes_Test_RLS.md
+docs/Comptes_Test_RLS.docx
 # ── Données extraites (régénérables via scripts) ─────────────────────────────
 data/graph/*.csv
 data/graph/*.json
