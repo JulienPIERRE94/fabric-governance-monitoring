@@ -32,18 +32,18 @@ Domaine Banque                          Domaine Assurance
 ══════════════════════════════          ══════════════════════════════════════════
   WS-Banking                              WS-Insurance
   └─ Lakehouse_Banking                    └─ Lakehouse_Insurance
-       ├─ dim_customers       ──────►          ├─ sc_dim_customers        (Shortcut)
-       ├─ fact_bank_accounts  ──────►          ├─ sc_fact_bank_accounts   (Shortcut)
-       └─ bridge_ins_customers──────►          ├─ sc_bridge_ins_customers (Shortcut)
+       ├─ dim_customers       ──────►          ├─ sc_dim_customers        (Shortcut) ┐ Data Access
+       ├─ fact_bank_accounts  ──────►          ├─ sc_fact_bank_accounts   (Shortcut) ┤ Role Deny
+       └─ bridge_ins_customers──────►          ├─ sc_bridge_ins_customers (Shortcut) ┘ (sophie)
                                                ├─ insurance_contracts     (données Pacifica)
                                                ├─ insurance_claims
                                                ├─ security_table
                                                └─ SEM_Insurance           (Modèle sémantique)
-                                                    ├─ Rôle BankingAdvisor
-                                                    └─ Rôle InsuranceUser
+                                                    ├─ Rôle BankingAdvisor (RLS DAX)
+                                                    └─ Rôle InsuranceUser  (RLS DAX)
 ```
 
-### 2.2 Les trois mécanismes de protection
+### 2.2 Les quatre mécanismes de protection
 
 #### Mécanisme 1 — Isolation des workspaces Fabric
 
@@ -88,6 +88,23 @@ security_table         → [user_email] = USERPRINCIPALNAME()
 ```
 → Le gestionnaire ne voit que les clients ayant **explicitement consenti** au partage de données  
 → Il ne voit **aucune donnée bancaire** (les comptes et soldes sont bloqués à la source par `FALSE()`)
+
+#### Mécanisme 4 — OneLake Data Access Roles (contrôle au niveau table)
+
+Les **Data Access Roles** du Lakehouse protègent les données au niveau de la couche de stockage elle-même, indépendamment du modèle sémantique. Ils bloquent tout accès direct via SQL endpoint, notebooks Spark ou API OneLake.
+
+Configuration déployée sur `LH-Insurance` :
+
+| Rôle Data Access | Tables autorisées | Utilisateurs |
+|---|---|---|
+| `BankingAdvisors` | Toutes les tables (filtré ensuite par RLS SM) | hugo.lambert, isabelle.fontaine |
+| `InsuranceUsersRestricted` | `insurance_contracts`, `insurance_claims`, `security_table` uniquement | sophie.marchand |
+
+Les shortcuts `sc_dim_customers`, `sc_fact_bank_accounts`, `sc_bridge_ins_customers` sont **explicitement refusés (Deny)** pour le rôle `InsuranceUsersRestricted`.
+
+> **Résultat** : même si sophie.marchand se connecte au SQL endpoint de LH-Insurance et exécute `SELECT * FROM sc_fact_bank_accounts`, la requête retourne une erreur d'autorisation — les données bancaires sont protégées indépendamment du canal d'accès.
+
+Script de déploiement : [`scripts/fabric/Set-OneLakeDataAccessRoles.ps1`](../scripts/fabric/Set-OneLakeDataAccessRoles.ps1)
 
 ---
 
@@ -160,11 +177,17 @@ Tentative d'accès non autorisé
 │  Couche 2 : Shortcut OneLake  │ ← Données source inaccessibles directement
 │  (identité service, pas user) │
 └───────────────┬───────────────┘
-                │ (si accès modèle)
+                │ (si accès Lakehouse)
+                ▼
+┌───────────────────────────────┐
+│  Couche 4 : Data Access Roles │ ← Accès table par table (SQL endpoint,
+│  (OneLake, niveau stockage)   │   notebooks, API OneLake bloqués)
+└───────────────┬───────────────┘
+                │ (si accès via Modèle Sémantique)
                 ▼
 ┌───────────────────────────────┐
 │  Couche 3 : RLS Sémantique    │ ← Filtre ligne par ligne selon l'identité
-│  (USERPRINCIPALNAME() / DAX)  │
+│  (USERPRINCIPALNAME() / DAX)  │   (BankingAdvisor / InsuranceUser)
 └───────────────────────────────┘
 ```
 
@@ -196,6 +219,7 @@ Tentative d'accès non autorisé
 | Partage inter-workspace | OneLake Shortcuts | [aka.ms/onelake-shortcuts](https://aka.ms/onelake-shortcuts) |
 | Modèle analytique | Direct Lake Semantic Model (TMDL) | [aka.ms/direct-lake](https://aka.ms/direct-lake) |
 | Sécurité des données | Row-Level Security DAX | [aka.ms/pbi-rls](https://aka.ms/pbi-rls) |
+| Sécurité Lakehouse | OneLake Data Access Roles | [aka.ms/onelake-data-access-roles](https://aka.ms/onelake-data-access-roles) |
 | Gestion des identités | Microsoft Entra ID (Azure AD) | [aka.ms/entra](https://aka.ms/entra) |
 | Déploiement | Fabric REST API + PowerShell | [aka.ms/fabric-api](https://aka.ms/fabric-api) |
 
