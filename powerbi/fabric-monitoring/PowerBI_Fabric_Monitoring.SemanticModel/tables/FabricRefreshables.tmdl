@@ -1,0 +1,103 @@
+table FabricRefreshables
+
+	column id
+		dataType: string
+		sourceColumn: id
+
+	column name
+		dataType: string
+		sourceColumn: name
+
+	column kind
+		dataType: string
+		sourceColumn: kind
+
+	column startTime
+		dataType: dateTime
+		formatString: General Date
+		sourceColumn: startTime
+
+	column endTime
+		dataType: dateTime
+		formatString: General Date
+		sourceColumn: endTime
+
+	column refreshCount
+		dataType: int64
+		formatString: 0
+		sourceColumn: refreshCount
+
+	column refreshFailures
+		dataType: int64
+		formatString: 0
+		sourceColumn: refreshFailures
+
+	column averageDuration
+		dataType: double
+		formatString: #,0.00
+		sourceColumn: averageDuration
+
+	column medianDuration
+		dataType: double
+		formatString: #,0.00
+		sourceColumn: medianDuration
+
+	column refreshesPerDay
+		dataType: double
+		formatString: #,0.00
+		sourceColumn: refreshesPerDay
+
+	column capacityId
+		dataType: string
+		sourceColumn: capacityId
+
+	column capacityName
+		dataType: string
+		sourceColumn: capacityName
+
+	column workspaceId
+		dataType: string
+		sourceColumn: workspaceId
+
+	column workspaceName
+		dataType: string
+		sourceColumn: workspaceName
+
+	column configuredById
+		dataType: string
+		sourceColumn: configuredById
+
+	partition FabricRefreshables = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\fabric_refreshables.csv",
+				    HasContent = try File.Contents(FilePath) otherwise null,
+				    Empty = #table(
+				        type table [id=text, name=text, kind=text, startTime=datetime, endTime=datetime, refreshCount=Int64.Type, refreshFailures=Int64.Type, averageDuration=number, medianDuration=number, refreshesPerDay=number, capacityId=text, capacityName=text, workspaceId=text, workspaceName=text, configuredById=text],
+				        {}
+				    ),
+				    Result = if HasContent = null then Empty else
+				        let
+				            Source = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed = Table.TransformColumnTypes(Headers, {
+				                {"id", type text},
+				                {"name", type text},
+				                {"kind", type text},
+				                {"startTime", type datetime},
+				                {"endTime", type datetime},
+				                {"refreshCount", Int64.Type},
+				                {"refreshFailures", Int64.Type},
+				                {"averageDuration", type number},
+				                {"medianDuration", type number},
+				                {"refreshesPerDay", type number},
+				                {"capacityId", type text},
+				                {"capacityName", type text},
+				                {"workspaceId", type text},
+				                {"workspaceName", type text},
+				                {"configuredById", type text}
+				            }, "en-US")
+				        in Typed
+				in
+				    Result

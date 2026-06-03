@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "datasetReference": {
+    "byPath": {
+      "path": "../PowerBI_Graph_Monitoring.SemanticModel"
+    },
+    "byConnection": null
+  }
+}

@@ -1,0 +1,210 @@
+table _GraphMeasures
+
+	measure 'Total Utilisateurs Graph' = COUNTROWS(GraphUsers)
+		formatString: #,0
+
+	measure 'Utilisateurs Actifs Graph' = CALCULATE(COUNTROWS(GraphUsers), GraphUsers[accountEnabled] = TRUE())
+		formatString: #,0
+
+	measure 'Total Sign-Ins (7j)' = COUNTROWS(GraphSignIns)
+		formatString: #,0
+
+	measure 'Sign-Ins Interactifs' = CALCULATE(COUNTROWS(GraphSignIns), GraphSignIns[isInteractive] = TRUE())
+		formatString: #,0
+
+	measure 'Sign-Ins Non Interactifs' = CALCULATE(COUNTROWS(GraphSignIns), GraphSignIns[isInteractive] = FALSE())
+		formatString: #,0
+
+	measure 'Apps Distinctes' = DISTINCTCOUNT(GraphSignIns[appId])
+		formatString: #,0
+
+	measure 'Total Service Principals' = COUNTROWS(GraphServicePrincipals)
+		formatString: #,0
+
+
+	measure 'Total API Calls' = COUNTROWS(Fact_API_Calls)
+		formatString: #,0
+
+	measure 'Total API Calls (App Only)' =
+			CALCULATE(
+			    COUNTROWS(Fact_API_Calls),
+			    Fact_API_Calls[UserId] = ""
+			)
+		formatString: #,0
+
+	measure 'Total API Calls (Delegated)' =
+			CALCULATE(
+			    COUNTROWS(Fact_API_Calls),
+			    Fact_API_Calls[UserId] <> ""
+			)
+		formatString: #,0
+
+	measure 'Distinct Applications' = DISTINCTCOUNT(Fact_API_Calls[AppId])
+		formatString: #,0
+
+	measure 'Distinct Users Calling API' = DISTINCTCOUNT(Fact_API_Calls[UserId])
+		formatString: #,0
+
+	measure 'Distinct Endpoints Called' = DISTINCTCOUNT(Fact_API_Calls[Endpoint])
+		formatString: #,0
+
+
+	measure 'Avg Duration (ms)' = AVERAGE(Fact_API_Calls[DurationMs])
+		formatString: #,0
+
+	measure 'Max Duration (ms)' = MAX(Fact_API_Calls[DurationMs])
+		formatString: #,0
+
+	measure 'P95 Duration (ms)' =
+			PERCENTILEINC(Fact_API_Calls[DurationMs], 0.95)
+		formatString: #,0
+
+	measure 'Total Duration (ms)' = SUM(Fact_API_Calls[DurationMs])
+		formatString: #,0
+
+
+	measure 'Total Errors' =
+			CALCULATE(
+			    COUNTROWS(Fact_API_Calls),
+			    Fact_API_Calls[StatusCode] >= 400
+			)
+		formatString: #,0
+
+	measure 'Error Rate (%)' =
+			DIVIDE(
+			    CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[StatusCode] >= 400),
+			    COUNTROWS(Fact_API_Calls)
+			)
+		formatString: 0.00%
+
+	measure 'Total 4xx Errors' =
+			CALCULATE(
+			    COUNTROWS(Fact_API_Calls),
+			    Fact_API_Calls[StatusCode] >= 400,
+			    Fact_API_Calls[StatusCode] < 500
+			)
+		formatString: #,0
+
+	measure 'Total 5xx Errors' =
+			CALCULATE(
+			    COUNTROWS(Fact_API_Calls),
+			    Fact_API_Calls[StatusCode] >= 500
+			)
+		formatString: #,0
+
+	measure 'Total Forbidden (403)' =
+			CALCULATE(
+			    COUNTROWS(Fact_API_Calls),
+			    Fact_API_Calls[StatusCode] = 403
+			)
+		formatString: #,0
+
+	measure 'Total Unauthorized (401)' =
+			CALCULATE(
+			    COUNTROWS(Fact_API_Calls),
+			    Fact_API_Calls[StatusCode] = 401
+			)
+		formatString: #,0
+
+
+	measure 'Write Calls (POST/PUT/PATCH/DELETE)' =
+			CALCULATE(
+			    COUNTROWS(Fact_API_Calls),
+			    Fact_API_Calls[HttpMethod] IN {"POST", "PUT", "PATCH", "DELETE"}
+			)
+		formatString: #,0
+
+	measure 'Write Rate (%)' =
+			DIVIDE(
+			    CALCULATE(
+			        COUNTROWS(Fact_API_Calls),
+			        Fact_API_Calls[HttpMethod] IN {"POST", "PUT", "PATCH", "DELETE"}
+			    ),
+			    COUNTROWS(Fact_API_Calls)
+			)
+		formatString: 0.00%
+
+
+	measure 'API Calls WoW Change' =
+			VAR CurrentPeriod = [Total API Calls]
+			VAR PreviousPeriod =
+			    CALCULATE(
+			        [Total API Calls],
+			        DATEADD(Dim_Time[Date], -7, DAY)
+			    )
+			RETURN DIVIDE(CurrentPeriod - PreviousPeriod, PreviousPeriod)
+		formatString: +0.00%;-0.00%;0.00%
+
+	measure 'API Calls MoM Change' =
+			VAR CurrentPeriod = [Total API Calls]
+			VAR PreviousPeriod =
+			    CALCULATE(
+			        [Total API Calls],
+			        DATEADD(Dim_Time[Date], -1, MONTH)
+			    )
+			RETURN DIVIDE(CurrentPeriod - PreviousPeriod, PreviousPeriod)
+		formatString: +0.00%;-0.00%;0.00%
+
+	measure 'Calls Last 7 Days' =
+			CALCULATE(
+			    [Total API Calls],
+			    DATESINPERIOD(Dim_Time[Date], LASTDATE(Dim_Time[Date]), -7, DAY)
+			)
+		formatString: #,0
+
+	measure 'Calls Last 30 Days' =
+			CALCULATE(
+			    [Total API Calls],
+			    DATESINPERIOD(Dim_Time[Date], LASTDATE(Dim_Time[Date]), -30, DAY)
+			)
+		formatString: #,0
+
+
+	measure 'Calls per Day (Avg)' =
+			AVERAGEX(
+			    VALUES(Dim_Time[Date]),
+			    [Total API Calls]
+			)
+		formatString: #,0.0
+
+	measure 'Anomaly Score (vs Avg)' =
+			VAR DailyAvg = [Calls per Day (Avg)]
+			VAR Today = [Total API Calls]
+			RETURN IF(DailyAvg = 0, BLANK(), DIVIDE(Today - DailyAvg, DailyAvg))
+		formatString: +0.00%;-0.00%;0.00%
+
+	measure 'Top App by Calls' =
+			MAXX(
+			    TOPN(1, SUMMARIZE(Fact_API_Calls, Dim_Application[AppDisplayName], "cnt", [Total API Calls]), [cnt]),
+			    Dim_Application[AppDisplayName]
+			)
+
+	measure 'Top Endpoint by Calls' =
+			MAXX(
+			    TOPN(1, SUMMARIZE(Fact_API_Calls, Fact_API_Calls[Endpoint], "cnt", [Total API Calls]), [cnt]),
+			    Fact_API_Calls[Endpoint]
+			)
+
+
+	measure 'Apps with Errors' =
+			CALCULATE(
+			    DISTINCTCOUNT(Fact_API_Calls[AppId]),
+			    Fact_API_Calls[StatusCode] >= 400
+			)
+		formatString: #,0
+
+	measure 'Apps with Only Errors (%)' =
+			VAR AppsWithErrors = [Apps with Errors]
+			VAR TotalApps     = [Distinct Applications]
+			RETURN DIVIDE(AppsWithErrors, TotalApps)
+		formatString: 0.00%
+
+	column Marqueur
+		dataType: string
+		isHidden
+		sourceColumn: [Marqueur]
+
+	partition _GraphMeasures = calculated
+		mode: import
+		source = ROW("Marqueur", "_")
+

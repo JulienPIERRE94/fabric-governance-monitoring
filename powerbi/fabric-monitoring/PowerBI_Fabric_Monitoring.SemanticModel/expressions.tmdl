@@ -1,0 +1,1 @@
+expression DataFolder = "C:\Users\Julien.SQL2022\Desktop\CA\CA-GIP\data\fabric" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]

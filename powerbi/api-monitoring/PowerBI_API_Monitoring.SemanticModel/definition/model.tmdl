@@ -1,0 +1,23 @@
+model Model
+	culture: fr-FR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: fr-FR
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["CsvPath","ActivityEvents"]
+
+annotation PBI_TimeIntelligenceEnabled = 0
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table ActivityEvents
+ref table DimDate
+ref table _Measures
+ref table DateTableTemplate_b9d2581f-c1f9-4fb3-938b-8ebe10c5004e
+ref table LocalDateTable_7c8507bb-7ef8-4f09-b473-2445ae7a239c
+ref table LocalDateTable_b7083ebd-5b8f-418c-9a8f-6f74131b142e
+

@@ -1,0 +1,127 @@
+table _FabricMeasures
+	lineageTag: 70227244-48d2-4184-a3f2-3b7ca2a9a3c8
+
+	measure 'Total Workspaces' = COUNTROWS(FabricWorkspaces)
+		formatString: #,0
+		lineageTag: a4e0a0ad-994f-41cc-add9-20882ea923a6
+
+	measure 'Workspaces Actifs' = CALCULATE(COUNTROWS(FabricWorkspaces), FabricWorkspaces[state] = "Active")
+		formatString: #,0
+		lineageTag: 374f4ab4-3594-4a09-9c67-8210d2ba3b2c
+
+	measure 'Total Items' = COUNTROWS(FabricItems)
+		formatString: #,0
+		lineageTag: 1788773a-3075-4097-9d41-01ffeee707c3
+
+	measure 'Items par Type' = DISTINCTCOUNT(FabricItems[type])
+		formatString: #,0
+		lineageTag: 591123bb-facb-4238-9753-ea26d08a70ea
+
+	measure 'Total Capacites' = COUNTROWS(FabricCapacities)
+		formatString: #,0
+		lineageTag: 7465ef97-5a5f-4070-9587-29e8315328b0
+
+	measure 'Capacites Actives' = CALCULATE(COUNTROWS(FabricCapacities), FabricCapacities[state] = "Active")
+		formatString: #,0
+		lineageTag: e61d5354-66de-4841-9f30-5dafcd6d0ab6
+
+	measure 'Total Refreshables' = COUNTROWS(FabricRefreshables)
+		formatString: #,0
+		lineageTag: cbdc239b-d30a-4423-aa58-eb022dc01a1a
+
+	measure 'Refresh / Jour Moyen' = AVERAGE(FabricRefreshables[refreshesPerDay])
+		formatString: #,0.00
+		lineageTag: 3a3811b7-5246-4b36-a68e-e0c652f61e73
+
+	measure 'Echecs Refresh' = SUM(FabricRefreshables[refreshFailures])
+		formatString: #,0
+		lineageTag: b9c233a8-40cc-4995-b6ff-50cb0f631fce
+
+	measure 'Taux Echec Refresh %' =
+			DIVIDE(
+			    SUM(FabricRefreshables[refreshFailures]),
+			    SUM(FabricRefreshables[refreshCount])
+			)
+		formatString: 0.00%
+		lineageTag: a65850c1-562d-40e8-8a75-d3acc770443f
+
+	measure 'Duree Moyenne Refresh (s)' = AVERAGE(FabricRefreshables[averageDuration])
+		formatString: #,0.0
+		lineageTag: cccadba3-937a-4206-99e3-d7bad6dfd354
+
+	measure 'Total Activites' = COUNTROWS(FabricActivities)
+		formatString: #,0
+		lineageTag: 53294978-fbe4-43ae-84ea-57ed509aa85f
+
+	measure 'Utilisateurs Distincts' = DISTINCTCOUNT(FabricActivities[UserId])
+		formatString: #,0
+		lineageTag: c7c6a001-fa62-45a1-9813-f6cbda1a7295
+
+	measure 'Operations Distinctes' = DISTINCTCOUNT(FabricActivities[Operation])
+		formatString: #,0
+		lineageTag: 07dca854-0df0-4f62-85d7-186f9c303269
+
+	measure 'Total Activites Archive' = COUNTROWS(FabricActivitiesArchive)
+		formatString: #,0
+		lineageTag: a0e7a509-a5a1-4dff-983d-26bab74c9274
+
+	measure 'Utilisateurs Distincts Archive' = DISTINCTCOUNT(FabricActivitiesArchive[UserId])
+		formatString: #,0
+		lineageTag: d8e16c88-922a-4d4d-888b-14fcc0fb5fb5
+
+	measure 'Activites 7j' =
+			CALCULATE(
+			    COUNTROWS(FabricActivitiesArchive),
+			    FabricActivitiesArchive[CreationTime] >= TODAY() - 7
+			)
+		formatString: #,0
+		lineageTag: 5bcd148e-bdab-4d34-9a65-4d40bab91e3c
+
+	measure 'Activites 30j' =
+			CALCULATE(
+			    COUNTROWS(FabricActivitiesArchive),
+			    FabricActivitiesArchive[CreationTime] >= TODAY() - 30
+			)
+		formatString: #,0
+		lineageTag: fc5f506b-78d9-43bf-b41f-0b8e31300efa
+
+	measure 'Activites 90j' =
+			CALCULATE(
+			    COUNTROWS(FabricActivitiesArchive),
+			    FabricActivitiesArchive[CreationTime] >= TODAY() - 90
+			)
+		formatString: #,0
+		lineageTag: cb3e7bc4-fa77-4c7b-9703-84d85d97d45d
+
+	measure 'Snapshots Refresh' = COUNTROWS(FabricRefreshablesHistory)
+		formatString: #,0
+		lineageTag: 546f37b5-ddec-474f-82e4-604badb94405
+
+	measure 'Dernier Snapshot' = MAX(FabricRefreshablesHistory[SnapshotTime])
+		formatString: General Date
+		lineageTag: e1f0952d-e9b6-4354-b15d-fb9f1aa81c3e
+
+	measure 'Refresh Count Delta' =
+			VAR _Last  = CALCULATE(SUM(FabricRefreshablesHistory[refreshCount]), FabricRefreshablesHistory[SnapshotTime] = MAX(FabricRefreshablesHistory[SnapshotTime]))
+			VAR _First = CALCULATE(SUM(FabricRefreshablesHistory[refreshCount]), FabricRefreshablesHistory[SnapshotTime] = MIN(FabricRefreshablesHistory[SnapshotTime]))
+			RETURN _Last - _First
+		formatString: #,0
+		lineageTag: 371f89d8-64c1-49df-a0df-8abbf3d72705
+
+	measure 'Failures Delta' =
+			VAR _Last  = CALCULATE(SUM(FabricRefreshablesHistory[refreshFailures]), FabricRefreshablesHistory[SnapshotTime] = MAX(FabricRefreshablesHistory[SnapshotTime]))
+			VAR _First = CALCULATE(SUM(FabricRefreshablesHistory[refreshFailures]), FabricRefreshablesHistory[SnapshotTime] = MIN(FabricRefreshablesHistory[SnapshotTime]))
+			RETURN _Last - _First
+		formatString: #,0
+		lineageTag: b373b0dc-0b4f-408b-bc71-edb6d64c22fa
+
+	column Marqueur
+		dataType: string
+		isHidden
+		lineageTag: 8299b826-7336-43cd-a001-3ca9d265f1bd
+		sourceColumn: [Marqueur]
+
+	partition _FabricMeasures = calculated
+		mode: import
+		source = ROW("Marqueur", "_")
+

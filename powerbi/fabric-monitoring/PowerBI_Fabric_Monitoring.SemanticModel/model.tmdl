@@ -1,0 +1,15 @@
+model Model
+	culture: fr-FR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: fr-FR
+
+annotation PBI_QueryOrder = ["DataFolder","FabricWorkspaces","FabricItems","FabricCapacities","FabricRefreshables","FabricRefreshablesHistory","FabricActivities","FabricActivitiesArchive"]
+
+ref table FabricWorkspaces
+ref table FabricItems
+ref table FabricCapacities
+ref table FabricRefreshables
+ref table FabricRefreshablesHistory
+ref table FabricActivities
+ref table FabricActivitiesArchive
+ref table _FabricMeasures

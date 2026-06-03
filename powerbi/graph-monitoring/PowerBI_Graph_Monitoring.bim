@@ -1,0 +1,465 @@
+{
+  "name": "PowerBI_Graph_Monitoring",
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "fr-FR",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "fr-FR",
+    "annotations": [
+      { "name": "PBI_QueryOrder", "value": "[\"DataFolder\",\"TenantId\",\"ClientId\",\"ClientSecret\",\"fnGetGraphToken\",\"fnGetGraphPaged\",\"GraphUsers\",\"GraphSignIns\",\"GraphServicePrincipals\",\"Fact_API_Calls\",\"Dim_Application\",\"Dim_User\",\"Dim_Endpoint\"]" }
+    ],
+    "relationships": [
+      {
+        "name": "Fact_API_Calls-Dim_Application",
+        "fromTable": "Fact_API_Calls",
+        "fromColumn": "AppId",
+        "toTable": "Dim_Application",
+        "toColumn": "AppId",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Fact_API_Calls-Dim_User",
+        "fromTable": "Fact_API_Calls",
+        "fromColumn": "UserId",
+        "toTable": "Dim_User",
+        "toColumn": "UserId",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Fact_API_Calls-Dim_Endpoint",
+        "fromTable": "Fact_API_Calls",
+        "fromColumn": "Endpoint",
+        "toTable": "Dim_Endpoint",
+        "toColumn": "Endpoint",
+        "crossFilteringBehavior": "oneDirection"
+      },
+      {
+        "name": "Fact_API_Calls-Dim_Time",
+        "fromTable": "Fact_API_Calls",
+        "fromColumn": "TimestampDate",
+        "toTable": "Dim_Time",
+        "toColumn": "Date",
+        "crossFilteringBehavior": "oneDirection"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "DataFolder",
+        "kind": "m",
+        "expression": [
+          "\"C:\\\\Users\\\\Julien.SQL2022\\\\Desktop\\\\CA\\\\CA-GIP\\\\data\\\\graph\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+        ]
+      },
+      {
+        "name": "TenantId",
+        "kind": "m",
+        "expression": [
+          "\"00000000-0000-0000-0000-000000000000\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+        ]
+      },
+      {
+        "name": "ClientId",
+        "kind": "m",
+        "expression": [
+          "\"00000000-0000-0000-0000-000000000000\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+        ]
+      },
+      {
+        "name": "ClientSecret",
+        "kind": "m",
+        "expression": [
+          "\"REPLACE_WITH_SECRET\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+        ]
+      },
+      {
+        "name": "fnGetGraphToken",
+        "kind": "m",
+        "expression": [
+          "let",
+          "    fn = (tenantId as text, clientId as text, clientSecret as text) as text =>",
+          "    let",
+          "        tokenUrl = \"https://login.microsoftonline.com/\" & tenantId & \"/oauth2/v2.0/token\",",
+          "        body = \"grant_type=client_credentials\"",
+          "            & \"&client_id=\" & clientId",
+          "            & \"&client_secret=\" & Uri.EscapeDataString(clientSecret)",
+          "            & \"&scope=\" & Uri.EscapeDataString(\"https://graph.microsoft.com/.default\"),",
+          "        response = Web.Contents(",
+          "            tokenUrl,",
+          "            [",
+          "                Content = Text.ToBinary(body),",
+          "                Headers = [#\"Content-Type\" = \"application/x-www-form-urlencoded\"],",
+          "                ManualStatusHandling = {400, 401, 403}",
+          "            ]",
+          "        ),",
+          "        json = Json.Document(response),",
+          "        token = json[access_token]",
+          "    in",
+          "        token",
+          "in",
+          "    fn"
+        ]
+      },
+      {
+        "name": "fnGetGraphPaged",
+        "kind": "m",
+        "expression": [
+          "let",
+          "    fn = (url as text, token as text) as list =>",
+          "    let",
+          "        FetchPage = (pageUrl as text) =>",
+          "            let",
+          "                response = Web.Contents(",
+          "                    pageUrl,",
+          "                    [",
+          "                        Headers = [",
+          "                            #\"Authorization\" = \"Bearer \" & token,",
+          "                            #\"ConsistencyLevel\" = \"eventual\"",
+          "                        ],",
+          "                        ManualStatusHandling = {400, 401, 403, 429, 503}",
+          "                    ]",
+          "                ),",
+          "                json = Json.Document(response)",
+          "            in",
+          "                json,",
+          "        Pages = List.Generate(",
+          "            () => [page = FetchPage(url)],",
+          "            each [page] <> null,",
+          "            each [",
+          "                page = if Record.HasFields([page], \"@odata.nextLink\")",
+          "                       then FetchPage(Record.Field([page], \"@odata.nextLink\"))",
+          "                       else null",
+          "            ],",
+          "            each [page][value]",
+          "        ),",
+          "        Combined = List.Combine(Pages)",
+          "    in",
+          "        Combined",
+          "in",
+          "    fn"
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "name": "GraphUsers",
+        "columns": [
+          { "name": "id", "dataType": "string", "sourceColumn": "id" },
+          { "name": "displayName", "dataType": "string", "sourceColumn": "displayName" },
+          { "name": "userPrincipalName", "dataType": "string", "sourceColumn": "userPrincipalName" },
+          { "name": "mail", "dataType": "string", "sourceColumn": "mail" },
+          { "name": "jobTitle", "dataType": "string", "sourceColumn": "jobTitle" },
+          { "name": "department", "dataType": "string", "sourceColumn": "department" },
+          { "name": "accountEnabled", "dataType": "boolean", "sourceColumn": "accountEnabled" }
+        ],
+        "partitions": [
+          {
+            "name": "GraphUsers",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Token = fnGetGraphToken(TenantId, ClientId, ClientSecret),",
+                "    Url = \"https://graph.microsoft.com/v1.0/users?$select=id,displayName,userPrincipalName,mail,jobTitle,department,accountEnabled&$top=999\",",
+                "    Data = fnGetGraphPaged(Url, Token),",
+                "    AsTable = Table.FromList(Data, Splitter.SplitByNothing(), null, null, ExtraValues.Error),",
+                "    Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"id\",\"displayName\",\"userPrincipalName\",\"mail\",\"jobTitle\",\"department\",\"accountEnabled\"}),",
+                "    Typed = Table.TransformColumnTypes(Expanded, {",
+                "        {\"id\", type text},",
+                "        {\"displayName\", type text},",
+                "        {\"userPrincipalName\", type text},",
+                "        {\"mail\", type text},",
+                "        {\"jobTitle\", type text},",
+                "        {\"department\", type text},",
+                "        {\"accountEnabled\", type logical}",
+                "    })",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "GraphSignIns",
+        "columns": [
+          { "name": "id", "dataType": "string", "sourceColumn": "id" },
+          { "name": "createdDateTime", "dataType": "dateTime", "sourceColumn": "createdDateTime", "formatString": "General Date" },
+          { "name": "userPrincipalName", "dataType": "string", "sourceColumn": "userPrincipalName" },
+          { "name": "userId", "dataType": "string", "sourceColumn": "userId" },
+          { "name": "appDisplayName", "dataType": "string", "sourceColumn": "appDisplayName" },
+          { "name": "appId", "dataType": "string", "sourceColumn": "appId" },
+          { "name": "ipAddress", "dataType": "string", "sourceColumn": "ipAddress" },
+          { "name": "clientAppUsed", "dataType": "string", "sourceColumn": "clientAppUsed" },
+          { "name": "isInteractive", "dataType": "boolean", "sourceColumn": "isInteractive" }
+        ],
+        "partitions": [
+          {
+            "name": "GraphSignIns",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Token = fnGetGraphToken(TenantId, ClientId, ClientSecret),",
+                "    Filter = \"createdDateTime ge \" & DateTime.ToText(DateTime.LocalNow() - #duration(7,0,0,0), \"yyyy-MM-ddTHH:mm:ssZ\"),",
+                "    Url = \"https://graph.microsoft.com/v1.0/auditLogs/signIns?$filter=\" & Uri.EscapeDataString(Filter) & \"&$top=1000\",",
+                "    Data = fnGetGraphPaged(Url, Token),",
+                "    AsTable = Table.FromList(Data, Splitter.SplitByNothing(), null, null, ExtraValues.Error),",
+                "    Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"id\",\"createdDateTime\",\"userPrincipalName\",\"userId\",\"appDisplayName\",\"appId\",\"ipAddress\",\"clientAppUsed\",\"isInteractive\"}),",
+                "    Typed = Table.TransformColumnTypes(Expanded, {",
+                "        {\"id\", type text},",
+                "        {\"createdDateTime\", type datetime},",
+                "        {\"userPrincipalName\", type text},",
+                "        {\"userId\", type text},",
+                "        {\"appDisplayName\", type text},",
+                "        {\"appId\", type text},",
+                "        {\"ipAddress\", type text},",
+                "        {\"clientAppUsed\", type text},",
+                "        {\"isInteractive\", type logical}",
+                "    })",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "GraphServicePrincipals",
+        "columns": [
+          { "name": "id", "dataType": "string", "sourceColumn": "id" },
+          { "name": "appId", "dataType": "string", "sourceColumn": "appId" },
+          { "name": "displayName", "dataType": "string", "sourceColumn": "displayName" },
+          { "name": "servicePrincipalType", "dataType": "string", "sourceColumn": "servicePrincipalType" },
+          { "name": "accountEnabled", "dataType": "boolean", "sourceColumn": "accountEnabled" },
+          { "name": "appOwnerOrganizationId", "dataType": "string", "sourceColumn": "appOwnerOrganizationId" }
+        ],
+        "partitions": [
+          {
+            "name": "GraphServicePrincipals",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Token = fnGetGraphToken(TenantId, ClientId, ClientSecret),",
+                "    Url = \"https://graph.microsoft.com/v1.0/servicePrincipals?$select=id,appId,displayName,servicePrincipalType,accountEnabled,appOwnerOrganizationId&$top=999\",",
+                "    Data = fnGetGraphPaged(Url, Token),",
+                "    AsTable = Table.FromList(Data, Splitter.SplitByNothing(), null, null, ExtraValues.Error),",
+                "    Expanded = Table.ExpandRecordColumn(AsTable, \"Column1\", {\"id\",\"appId\",\"displayName\",\"servicePrincipalType\",\"accountEnabled\",\"appOwnerOrganizationId\"}),",
+                "    Typed = Table.TransformColumnTypes(Expanded, {",
+                "        {\"id\", type text},",
+                "        {\"appId\", type text},",
+                "        {\"displayName\", type text},",
+                "        {\"servicePrincipalType\", type text},",
+                "        {\"accountEnabled\", type logical},",
+                "        {\"appOwnerOrganizationId\", type text}",
+                "    })",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "_GraphMeasures",
+        "columns": [
+          { "type": "calculatedTableColumn", "name": "Marqueur", "dataType": "string", "isHidden": true, "sourceColumn": "[Marqueur]" }
+        ],
+        "partitions": [
+          {
+            "name": "_GraphMeasures",
+            "mode": "import",
+            "source": { "type": "calculated", "expression": "ROW(\"Marqueur\", \"_\")" }
+          }
+        ],
+        "measures": [
+          { "name": "Total Utilisateurs Graph",    "expression": "COUNTROWS(GraphUsers)",                                                                           "formatString": "#,0" },
+          { "name": "Utilisateurs Actifs Graph",   "expression": "CALCULATE(COUNTROWS(GraphUsers), GraphUsers[accountEnabled] = TRUE())",                           "formatString": "#,0" },
+          { "name": "Total Sign-Ins (7j)",         "expression": "COUNTROWS(GraphSignIns)",                                                                         "formatString": "#,0" },
+          { "name": "Sign-Ins Interactifs",        "expression": "CALCULATE(COUNTROWS(GraphSignIns), GraphSignIns[isInteractive] = TRUE())",                        "formatString": "#,0" },
+          { "name": "Sign-Ins Non Interactifs",    "expression": "CALCULATE(COUNTROWS(GraphSignIns), GraphSignIns[isInteractive] = FALSE())",                       "formatString": "#,0" },
+          { "name": "Apps Distinctes",             "expression": "DISTINCTCOUNT(GraphSignIns[appId])",                                                              "formatString": "#,0" },
+          { "name": "Total Service Principals",    "expression": "COUNTROWS(GraphServicePrincipals)",                                                               "formatString": "#,0" },
+          { "name": "Total API Calls",             "expression": "COUNTROWS(Fact_API_Calls)",                                                                       "formatString": "#,0" },
+          { "name": "Total API Calls (App Only)",  "expression": "CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[UserId] = \"\")",                            "formatString": "#,0" },
+          { "name": "Total API Calls (Delegated)", "expression": "CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[UserId] <> \"\")",                           "formatString": "#,0" },
+          { "name": "Distinct Applications",       "expression": "DISTINCTCOUNT(Fact_API_Calls[AppId])",                                                           "formatString": "#,0" },
+          { "name": "Distinct Users Calling API",  "expression": "DISTINCTCOUNT(Fact_API_Calls[UserId])",                                                          "formatString": "#,0" },
+          { "name": "Distinct Endpoints Called",   "expression": "DISTINCTCOUNT(Fact_API_Calls[Endpoint])",                                                        "formatString": "#,0" },
+          { "name": "Avg Duration (ms)",           "expression": "AVERAGE(Fact_API_Calls[DurationMs])",                                                            "formatString": "#,0" },
+          { "name": "Max Duration (ms)",           "expression": "MAX(Fact_API_Calls[DurationMs])",                                                                 "formatString": "#,0" },
+          { "name": "P95 Duration (ms)",           "expression": "PERCENTILEINC(Fact_API_Calls[DurationMs], 0.95)",                                                "formatString": "#,0" },
+          { "name": "Total Duration (ms)",         "expression": "SUM(Fact_API_Calls[DurationMs])",                                                                 "formatString": "#,0" },
+          { "name": "Total Errors",                "expression": "CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[StatusCode] >= 400)",                        "formatString": "#,0" },
+          { "name": "Error Rate (%)",              "expression": "DIVIDE(CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[StatusCode] >= 400), COUNTROWS(Fact_API_Calls))", "formatString": "0.00%" },
+          { "name": "Total 4xx Errors",            "expression": "CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[StatusCode] >= 400, Fact_API_Calls[StatusCode] < 500)", "formatString": "#,0" },
+          { "name": "Total 5xx Errors",            "expression": "CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[StatusCode] >= 500)",                        "formatString": "#,0" },
+          { "name": "Total Forbidden (403)",       "expression": "CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[StatusCode] = 403)",                         "formatString": "#,0" },
+          { "name": "Total Unauthorized (401)",    "expression": "CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[StatusCode] = 401)",                         "formatString": "#,0" },
+          { "name": "Write Calls (POST/PUT/PATCH/DELETE)", "expression": "CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[HttpMethod] IN {\"POST\", \"PUT\", \"PATCH\", \"DELETE\"})", "formatString": "#,0" },
+          { "name": "Write Rate (%)",              "expression": "DIVIDE(CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[HttpMethod] IN {\"POST\",\"PUT\",\"PATCH\",\"DELETE\"}), COUNTROWS(Fact_API_Calls))", "formatString": "0.00%" },
+          { "name": "API Calls WoW Change",        "expression": "VAR CurrentPeriod = [Total API Calls] VAR PreviousPeriod = CALCULATE([Total API Calls], DATEADD(Dim_Time[Date], -7, DAY)) RETURN DIVIDE(CurrentPeriod - PreviousPeriod, PreviousPeriod)", "formatString": "+0.00%;-0.00%;0.00%" },
+          { "name": "API Calls MoM Change",        "expression": "VAR CurrentPeriod = [Total API Calls] VAR PreviousPeriod = CALCULATE([Total API Calls], DATEADD(Dim_Time[Date], -1, MONTH)) RETURN DIVIDE(CurrentPeriod - PreviousPeriod, PreviousPeriod)", "formatString": "+0.00%;-0.00%;0.00%" },
+          { "name": "Calls Last 7 Days",           "expression": "CALCULATE([Total API Calls], DATESINPERIOD(Dim_Time[Date], LASTDATE(Dim_Time[Date]), -7, DAY))",  "formatString": "#,0" },
+          { "name": "Calls Last 30 Days",          "expression": "CALCULATE([Total API Calls], DATESINPERIOD(Dim_Time[Date], LASTDATE(Dim_Time[Date]), -30, DAY))", "formatString": "#,0" },
+          { "name": "Calls per Day (Avg)",         "expression": "AVERAGEX(VALUES(Dim_Time[Date]), [Total API Calls])",                                            "formatString": "#,0.0" },
+          { "name": "Anomaly Score (vs Avg)",      "expression": "VAR DailyAvg = [Calls per Day (Avg)] VAR Today = [Total API Calls] RETURN IF(DailyAvg = 0, BLANK(), DIVIDE(Today - DailyAvg, DailyAvg))", "formatString": "+0.00%;-0.00%;0.00%" },
+          { "name": "Apps with Errors",            "expression": "CALCULATE(DISTINCTCOUNT(Fact_API_Calls[AppId]), Fact_API_Calls[StatusCode] >= 400)",              "formatString": "#,0" },
+          { "name": "Apps with Only Errors (%)",   "expression": "DIVIDE([Apps with Errors], [Distinct Applications])",                                            "formatString": "0.00%" }
+        ]
+      },
+      {
+        "name": "Fact_API_Calls",
+        "columns": [
+          { "name": "CallId",           "dataType": "string",   "isKey": true, "sourceColumn": "CallId" },
+          { "name": "Timestamp",        "dataType": "dateTime", "sourceColumn": "Timestamp", "formatString": "General Date" },
+          { "name": "AppId",            "dataType": "string",   "sourceColumn": "AppId" },
+          { "name": "UserId",           "dataType": "string",   "sourceColumn": "UserId" },
+          { "name": "RequestUri",       "dataType": "string",   "sourceColumn": "RequestUri" },
+          { "name": "Endpoint",         "dataType": "string",   "sourceColumn": "Endpoint" },
+          { "name": "HttpMethod",       "dataType": "string",   "sourceColumn": "HttpMethod" },
+          { "name": "StatusCode",       "dataType": "int64",    "sourceColumn": "StatusCode" },
+          { "name": "DurationMs",       "dataType": "int64",    "sourceColumn": "DurationMs" },
+          { "name": "IpAddress",        "dataType": "string",   "sourceColumn": "IpAddress" },
+          { "name": "UserAgent",        "dataType": "string",   "sourceColumn": "UserAgent" },
+          { "name": "ResourceTenantId","dataType": "string",   "sourceColumn": "ResourceTenantId" },
+          { "name": "OperationId",      "dataType": "string",   "sourceColumn": "OperationId" },
+          { "type": "calculated", "name": "TimestampDate", "isHidden": true, "dataType": "dateTime", "formatString": "Short Date",
+            "expression": "DATE(YEAR([Timestamp]), MONTH([Timestamp]), DAY([Timestamp]))" },
+          { "type": "calculated", "name": "IsError", "dataType": "boolean",
+            "expression": "IF([StatusCode] >= 400, TRUE(), FALSE())" },
+          { "type": "calculated", "name": "EndpointCategory", "dataType": "string",
+            "expression": ["SWITCH(TRUE(),",
+              "CONTAINSSTRING([RequestUri],\"/users\"),\"Identity\",",
+              "CONTAINSSTRING([RequestUri],\"/groups\"),\"Identity\",",
+              "CONTAINSSTRING([RequestUri],\"/applications\"),\"Identity\",",
+              "CONTAINSSTRING([RequestUri],\"/servicePrincipals\"),\"Identity\",",
+              "CONTAINSSTRING([RequestUri],\"/directoryRoles\"),\"Identity\",",
+              "CONTAINSSTRING([RequestUri],\"/messages\"),\"Mail\",",
+              "CONTAINSSTRING([RequestUri],\"/sendMail\"),\"Mail\",",
+              "CONTAINSSTRING([RequestUri],\"/calendars\"),\"Calendar\",",
+              "CONTAINSSTRING([RequestUri],\"/contacts\"),\"Calendar\",",
+              "CONTAINSSTRING([RequestUri],\"/drive\"),\"Files\",",
+              "CONTAINSSTRING([RequestUri],\"/teams\"),\"Teams\",",
+              "CONTAINSSTRING([RequestUri],\"/chats\"),\"Teams\",",
+              "CONTAINSSTRING([RequestUri],\"/channels\"),\"Teams\",",
+              "CONTAINSSTRING([RequestUri],\"/reports\"),\"Reports\",",
+              "CONTAINSSTRING([RequestUri],\"/auditLogs\"),\"Security\",",
+              "\"Other\")"
+            ]
+          }
+        ],
+        "partitions": [{
+          "name": "Fact_API_Calls", "mode": "import",
+          "source": { "type": "m", "expression": [
+            "let",
+            "    FilePath = DataFolder & \"\\\\graph_activity_logs.csv\",",
+            "    HasContent = try File.Contents(FilePath) otherwise null,",
+            "    Empty = #table(type table [CallId=text,Timestamp=datetime,AppId=text,UserId=text,RequestUri=text,Endpoint=text,HttpMethod=text,StatusCode=Int64.Type,DurationMs=Int64.Type,IpAddress=text,UserAgent=text,ResourceTenantId=text,OperationId=text],{}),",
+            "    Result = if HasContent = null then Empty else",
+            "        let Source=Csv.Document(File.Contents(FilePath),[Delimiter=\",\",Encoding=65001,QuoteStyle=QuoteStyle.Csv]),",
+            "            Headers=Table.PromoteHeaders(Source,[PromoteAllScalars=true]),",
+            "            Typed=Table.TransformColumnTypes(Headers,{{\"CallId\",type text},{\"Timestamp\",type datetime},{\"AppId\",type text},{\"UserId\",type text},{\"RequestUri\",type text},{\"Endpoint\",type text},{\"HttpMethod\",type text},{\"StatusCode\",Int64.Type},{\"DurationMs\",Int64.Type},{\"IpAddress\",type text},{\"UserAgent\",type text},{\"ResourceTenantId\",type text},{\"OperationId\",type text}})",
+            "        in Typed",
+            "in Result"
+          ]}
+        }]
+      },
+      {
+        "name": "Dim_Application",
+        "columns": [
+          { "name": "AppId",                "dataType": "string",  "isKey": true, "sourceColumn": "AppId" },
+          { "name": "AppDisplayName",       "dataType": "string",  "sourceColumn": "AppDisplayName" },
+          { "name": "ServicePrincipalType", "dataType": "string",  "sourceColumn": "ServicePrincipalType" },
+          { "name": "AppOwnerTenantId",     "dataType": "string",  "sourceColumn": "AppOwnerTenantId" },
+          { "name": "IsExternal",           "dataType": "boolean", "sourceColumn": "IsExternal" }
+        ],
+        "partitions": [{
+          "name": "Dim_Application", "mode": "import",
+          "source": { "type": "m", "expression": [
+            "let FilePath=DataFolder&\"\\\\graph_dim_application.csv\",",
+            "    HasContent=try File.Contents(FilePath) otherwise null,",
+            "    Empty=#table(type table [AppId=text,AppDisplayName=text,ServicePrincipalType=text,AppOwnerTenantId=text,IsExternal=logical],{}),",
+            "    Result=if HasContent=null then Empty else let S=Csv.Document(File.Contents(FilePath),[Delimiter=\",\",Encoding=65001,QuoteStyle=QuoteStyle.Csv]),H=Table.PromoteHeaders(S,[PromoteAllScalars=true]),T=Table.TransformColumnTypes(H,{{\"AppId\",type text},{\"AppDisplayName\",type text},{\"ServicePrincipalType\",type text},{\"AppOwnerTenantId\",type text},{\"IsExternal\",type logical}}) in T",
+            "in Result"
+          ]}
+        }]
+      },
+      {
+        "name": "Dim_User",
+        "columns": [
+          { "name": "UserId",            "dataType": "string",  "isKey": true, "sourceColumn": "UserId" },
+          { "name": "UserPrincipalName", "dataType": "string",  "sourceColumn": "UserPrincipalName" },
+          { "name": "DisplayName",       "dataType": "string",  "sourceColumn": "DisplayName" },
+          { "name": "Department",        "dataType": "string",  "sourceColumn": "Department" },
+          { "name": "JobTitle",          "dataType": "string",  "sourceColumn": "JobTitle" },
+          { "name": "AccountEnabled",    "dataType": "boolean", "sourceColumn": "AccountEnabled" }
+        ],
+        "partitions": [{
+          "name": "Dim_User", "mode": "import",
+          "source": { "type": "m", "expression": [
+            "let FilePath=DataFolder&\"\\\\graph_dim_user.csv\",",
+            "    HasContent=try File.Contents(FilePath) otherwise null,",
+            "    Empty=#table(type table [UserId=text,UserPrincipalName=text,DisplayName=text,Department=text,JobTitle=text,AccountEnabled=logical],{}),",
+            "    Result=if HasContent=null then Empty else let S=Csv.Document(File.Contents(FilePath),[Delimiter=\",\",Encoding=65001,QuoteStyle=QuoteStyle.Csv]),H=Table.PromoteHeaders(S,[PromoteAllScalars=true]),T=Table.TransformColumnTypes(H,{{\"UserId\",type text},{\"UserPrincipalName\",type text},{\"DisplayName\",type text},{\"Department\",type text},{\"JobTitle\",type text},{\"AccountEnabled\",type logical}}) in T",
+            "in Result"
+          ]}
+        }]
+      },
+      {
+        "name": "Dim_Endpoint",
+        "columns": [
+          { "name": "Endpoint",         "dataType": "string",  "isKey": true, "sourceColumn": "Endpoint" },
+          { "name": "Category",         "dataType": "string",  "sourceColumn": "Category" },
+          { "name": "SubCategory",      "dataType": "string",  "sourceColumn": "SubCategory" },
+          { "name": "ApiVersion",       "dataType": "string",  "sourceColumn": "ApiVersion" },
+          { "name": "IsWriteOperation", "dataType": "boolean", "sourceColumn": "IsWriteOperation" },
+          { "name": "Description",      "dataType": "string",  "sourceColumn": "Description" }
+        ],
+        "partitions": [{
+          "name": "Dim_Endpoint", "mode": "import",
+          "source": { "type": "m", "expression": [
+            "let FilePath=DataFolder&\"\\\\graph_dim_endpoint.csv\",",
+            "    HasContent=try File.Contents(FilePath) otherwise null,",
+            "    Empty=#table(type table [Endpoint=text,Category=text,SubCategory=text,ApiVersion=text,IsWriteOperation=logical,Description=text],{}),",
+            "    Result=if HasContent=null then Empty else let S=Csv.Document(File.Contents(FilePath),[Delimiter=\",\",Encoding=65001,QuoteStyle=QuoteStyle.Csv]),H=Table.PromoteHeaders(S,[PromoteAllScalars=true]),T=Table.TransformColumnTypes(H,{{\"Endpoint\",type text},{\"Category\",type text},{\"SubCategory\",type text},{\"ApiVersion\",type text},{\"IsWriteOperation\",type logical},{\"Description\",type text}}) in T",
+            "in Result"
+          ]}
+        }]
+      },
+      {
+        "name": "Dim_Time",
+        "isHidden": true,
+        "columns": [
+          { "name": "Date",          "dataType": "dateTime", "isKey": true, "formatString": "Short Date", "sourceColumn": "[Date]" },
+          { "name": "Year",          "dataType": "int64",   "sourceColumn": "[Year]" },
+          { "name": "Month",         "dataType": "int64",   "sourceColumn": "[Month]" },
+          { "name": "MonthName",     "dataType": "string",  "sourceColumn": "[MonthName]" },
+          { "name": "Day",           "dataType": "int64",   "sourceColumn": "[Day]" },
+          { "name": "Hour",          "dataType": "int64",   "sourceColumn": "[Hour]" },
+          { "name": "DayOfWeek",     "dataType": "int64",   "sourceColumn": "[DayOfWeek]" },
+          { "name": "DayOfWeekName", "dataType": "string",  "sourceColumn": "[DayOfWeekName]" },
+          { "name": "IsWeekend",     "dataType": "boolean", "sourceColumn": "[IsWeekend]" },
+          { "name": "YearMonth",     "dataType": "string",  "sourceColumn": "[YearMonth]" },
+          { "name": "Quarter",       "dataType": "int64",   "sourceColumn": "[Quarter]" },
+          { "name": "YearQuarter",   "dataType": "string",  "sourceColumn": "[YearQuarter]" }
+        ],
+        "partitions": [{
+          "name": "Dim_Time", "mode": "import",
+          "source": { "type": "calculated", "expression": [
+            "ADDCOLUMNS(CALENDARAUTO(),",
+            "  \"Year\",YEAR([Date]),\"Month\",MONTH([Date]),\"MonthName\",FORMAT([Date],\"MMMM\"),",
+            "  \"Day\",DAY([Date]),\"Hour\",0,\"DayOfWeek\",WEEKDAY([Date],2),",
+            "  \"DayOfWeekName\",FORMAT([Date],\"dddd\"),",
+            "  \"IsWeekend\",IF(WEEKDAY([Date],2)>=6,TRUE(),FALSE()),",
+            "  \"YearMonth\",FORMAT([Date],\"YYYY-MM\"),\"Quarter\",QUARTER([Date]),",
+            "  \"YearQuarter\",FORMAT([Date],\"YYYY\")&\"-Q\"&QUARTER([Date]))"
+          ]}
+        }]
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+relationship rel_DimDate_ActivityEvents
+	fromColumn: ActivityEvents.DateKey
+	toColumn: DimDate.Date
+
+relationship 4c50f4a0-8621-47ae-9c31-ecdcafec6438
+	joinOnDateBehavior: datePartOnly
+	fromColumn: ActivityEvents.CreationTime
+	toColumn: LocalDateTable_7c8507bb-7ef8-4f09-b473-2445ae7a239c.Date
+
+relationship a194c2b1-a3b4-489b-bc7c-586c67938ed9
+	joinOnDateBehavior: datePartOnly
+	fromColumn: DimDate.Date
+	toColumn: LocalDateTable_b7083ebd-5b8f-418c-9a8f-6f74131b142e.Date
+

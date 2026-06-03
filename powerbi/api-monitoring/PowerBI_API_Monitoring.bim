@@ -1,0 +1,306 @@
+{
+  "name": "PowerBI_API_Monitoring",
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "fr-FR",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "fr-FR",
+    "annotations": [
+      { "name": "PBI_QueryOrder", "value": "[\"CsvPath\",\"ActivityEvents\"]" },
+      { "name": "PBI_TimeIntelligenceEnabled", "value": "0" }
+    ],
+    "expressions": [
+      {
+        "name": "CsvPath",
+        "kind": "m",
+        "expression": [
+          "\"C:\\Users\\Julien.SQL2022\\Desktop\\CA\\CA-GIP\\PowerBI_ActivityEvents_Sample.csv\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+        ],
+        "annotations": [
+          { "name": "PBI_NavigationStepName", "value": "Navigation" },
+          { "name": "PBI_ResultType", "value": "Text" }
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "name": "ActivityEvents",
+        "columns": [
+          { "name": "Id", "dataType": "string", "sourceColumn": "Id" },
+          { "name": "CreationTime", "dataType": "dateTime", "sourceColumn": "CreationTime", "formatString": "General Date" },
+          { "name": "Operation", "dataType": "string", "sourceColumn": "Operation" },
+          { "name": "UserId", "dataType": "string", "sourceColumn": "UserId" },
+          { "name": "UserType", "dataType": "string", "sourceColumn": "UserType" },
+          { "name": "UserKey", "dataType": "string", "sourceColumn": "UserKey" },
+          { "name": "Activity", "dataType": "string", "sourceColumn": "Activity" },
+          { "name": "ItemName", "dataType": "string", "sourceColumn": "ItemName" },
+          { "name": "WorkSpaceName", "dataType": "string", "sourceColumn": "WorkSpaceName" },
+          { "name": "WorkspaceId", "dataType": "string", "sourceColumn": "WorkspaceId" },
+          { "name": "ObjectId", "dataType": "string", "sourceColumn": "ObjectId" },
+          { "name": "DatasetName", "dataType": "string", "sourceColumn": "DatasetName" },
+          { "name": "DatasetId", "dataType": "string", "sourceColumn": "DatasetId" },
+          { "name": "ReportName", "dataType": "string", "sourceColumn": "ReportName" },
+          { "name": "ReportId", "dataType": "string", "sourceColumn": "ReportId" },
+          { "name": "ReportType", "dataType": "string", "sourceColumn": "ReportType" },
+          { "name": "CapacityId", "dataType": "string", "sourceColumn": "CapacityId" },
+          { "name": "CapacityName", "dataType": "string", "sourceColumn": "CapacityName" },
+          { "name": "ClientIP", "dataType": "string", "sourceColumn": "ClientIP" },
+          { "name": "UserAgent", "dataType": "string", "sourceColumn": "UserAgent" },
+          { "name": "IsSuccess", "dataType": "boolean", "sourceColumn": "IsSuccess" },
+          { "name": "RequestId", "dataType": "string", "sourceColumn": "RequestId" },
+          { "name": "ActivityId", "dataType": "string", "sourceColumn": "ActivityId" },
+          { "name": "DistributionMethod", "dataType": "string", "sourceColumn": "DistributionMethod" },
+          { "name": "ConsumptionMethod", "dataType": "string", "sourceColumn": "ConsumptionMethod" },
+          { "name": "DateKey", "dataType": "dateTime", "sourceColumn": "DateKey", "formatString": "Short Date" },
+          { "name": "HourOfDay", "dataType": "int64", "sourceColumn": "HourOfDay", "formatString": "0" },
+          { "name": "DayOfWeek", "dataType": "string", "sourceColumn": "DayOfWeek" },
+          { "name": "OperationCategory", "dataType": "string", "sourceColumn": "OperationCategory" }
+        ],
+        "partitions": [
+          {
+            "name": "ActivityEvents",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = Csv.Document(File.Contents(CsvPath), [Delimiter=\";\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),",
+                "    Typed = Table.TransformColumnTypes(Promoted, {",
+                "        {\"Id\", type text},",
+                "        {\"CreationTime\", type datetime},",
+                "        {\"Operation\", type text},",
+                "        {\"UserId\", type text},",
+                "        {\"UserType\", type text},",
+                "        {\"UserKey\", type text},",
+                "        {\"Activity\", type text},",
+                "        {\"ItemName\", type text},",
+                "        {\"WorkSpaceName\", type text},",
+                "        {\"WorkspaceId\", type text},",
+                "        {\"ObjectId\", type text},",
+                "        {\"DatasetName\", type text},",
+                "        {\"DatasetId\", type text},",
+                "        {\"ReportName\", type text},",
+                "        {\"ReportId\", type text},",
+                "        {\"ReportType\", type text},",
+                "        {\"CapacityId\", type text},",
+                "        {\"CapacityName\", type text},",
+                "        {\"ClientIP\", type text},",
+                "        {\"UserAgent\", type text},",
+                "        {\"IsSuccess\", type logical},",
+                "        {\"RequestId\", type text},",
+                "        {\"ActivityId\", type text},",
+                "        {\"DistributionMethod\", type text},",
+                "        {\"ConsumptionMethod\", type text}",
+                "    }),",
+                "    AddDate = Table.AddColumn(Typed, \"DateKey\", each DateTime.Date([CreationTime]), type date),",
+                "    AddHour = Table.AddColumn(AddDate, \"HourOfDay\", each Time.Hour([CreationTime]), Int64.Type),",
+                "    AddDayName = Table.AddColumn(AddHour, \"DayOfWeek\", each Date.DayOfWeekName([DateKey]), type text),",
+                "    AddCategory = Table.AddColumn(AddDayName, \"OperationCategory\", each",
+                "        if Text.Contains([Operation], \"Refresh\") then \"Refresh\"",
+                "        else if Text.Contains([Operation], \"View\") then \"Consultation\"",
+                "        else if Text.Contains([Operation], \"Export\") then \"Export\"",
+                "        else if Text.Contains([Operation], \"Get\") then \"API Read\"",
+                "        else if Text.Contains([Operation], \"Create\") or Text.Contains([Operation], \"Update\") or Text.Contains([Operation], \"Delete\") then \"API Write\"",
+                "        else \"Autre\", type text)",
+                "in",
+                "    AddCategory"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "DimDate",
+        "columns": [
+          { "type": "calculatedTableColumn", "name": "Date", "dataType": "dateTime", "formatString": "Short Date", "sourceColumn": "[Date]" },
+          { "type": "calculatedTableColumn", "name": "Annee", "dataType": "int64", "sourceColumn": "[Annee]", "formatString": "0" },
+          { "type": "calculatedTableColumn", "name": "Mois", "dataType": "string", "sourceColumn": "[Mois]" },
+          { "type": "calculatedTableColumn", "name": "JourSemaine", "dataType": "string", "sourceColumn": "[JourSemaine]" },
+          { "type": "calculatedTableColumn", "name": "NumJour", "dataType": "int64", "sourceColumn": "[NumJour]", "formatString": "0" }
+        ],
+        "partitions": [
+          {
+            "name": "DimDate",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": [
+                "ADDCOLUMNS(",
+                "    CALENDAR(MIN(ActivityEvents[DateKey]), MAX(ActivityEvents[DateKey])),",
+                "    \"Annee\", YEAR([Date]),",
+                "    \"Mois\", FORMAT([Date], \"yyyy-MM\"),",
+                "    \"JourSemaine\", FORMAT([Date], \"dddd\"),",
+                "    \"NumJour\", WEEKDAY([Date], 2)",
+                ")"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "_Measures",
+        "columns": [
+          { "type": "calculatedTableColumn", "name": "Marqueur", "dataType": "string", "isHidden": true, "sourceColumn": "[Marqueur]" }
+        ],
+        "partitions": [
+          {
+            "name": "_Measures",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": "ROW(\"Marqueur\", \"_\")"
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Evenements",
+            "expression": "COUNTROWS(ActivityEvents)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Utilisateurs Distincts",
+            "expression": "DISTINCTCOUNT(ActivityEvents[UserId])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Workspaces Actifs",
+            "expression": "DISTINCTCOUNT(ActivityEvents[WorkspaceId])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Datasets Utilises",
+            "expression": "DISTINCTCOUNT(ActivityEvents[DatasetId])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Rapports Consultes",
+            "expression": [
+              "CALCULATE(",
+              "    DISTINCTCOUNT(ActivityEvents[ReportId]),",
+              "    ActivityEvents[OperationCategory] = \"Consultation\"",
+              ")"
+            ],
+            "formatString": "#,0"
+          },
+          {
+            "name": "Appels API",
+            "expression": [
+              "CALCULATE(",
+              "    [Total Evenements],",
+              "    ActivityEvents[OperationCategory] IN { \"API Read\", \"API Write\" }",
+              ")"
+            ],
+            "formatString": "#,0"
+          },
+          {
+            "name": "Refresh Datasets",
+            "expression": "CALCULATE([Total Evenements], ActivityEvents[OperationCategory] = \"Refresh\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Exports",
+            "expression": "CALCULATE([Total Evenements], ActivityEvents[OperationCategory] = \"Export\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Consultations",
+            "expression": "CALCULATE([Total Evenements], ActivityEvents[OperationCategory] = \"Consultation\")",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Taux Succes",
+            "expression": [
+              "DIVIDE(",
+              "    CALCULATE([Total Evenements], ActivityEvents[IsSuccess] = TRUE()),",
+              "    [Total Evenements]",
+              ")"
+            ],
+            "formatString": "0.00%;-0.00%;0.00%"
+          },
+          {
+            "name": "Echecs",
+            "expression": "CALCULATE([Total Evenements], ActivityEvents[IsSuccess] = FALSE())",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Taux Echecs Refresh",
+            "expression": [
+              "VAR _refresh = [Refresh Datasets]",
+              "VAR _failed =",
+              "    CALCULATE(",
+              "        [Total Evenements],",
+              "        ActivityEvents[OperationCategory] = \"Refresh\",",
+              "        ActivityEvents[IsSuccess] = FALSE()",
+              "    )",
+              "RETURN DIVIDE(_failed, _refresh)"
+            ],
+            "formatString": "0.00%;-0.00%;0.00%"
+          },
+          {
+            "name": "Evenements Jour Precedent",
+            "expression": "CALCULATE([Total Evenements], DATEADD(DimDate[Date], -1, DAY))",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Evolution % vs J-1",
+            "expression": [
+              "DIVIDE(",
+              "    [Total Evenements] - [Evenements Jour Precedent],",
+              "    [Evenements Jour Precedent]",
+              ")"
+            ],
+            "formatString": "0.00%;-0.00%;0.00%"
+          },
+          {
+            "name": "Moyenne Mobile 7j",
+            "expression": [
+              "AVERAGEX(",
+              "    DATESINPERIOD(DimDate[Date], MAX(DimDate[Date]), -7, DAY),",
+              "    [Total Evenements]",
+              ")"
+            ],
+            "formatString": "#,0.00"
+          },
+          {
+            "name": "Pic Detecte",
+            "expression": [
+              "VAR _avg = [Moyenne Mobile 7j]",
+              "VAR _today = [Total Evenements]",
+              "RETURN IF(_today > _avg * 1.5, \"🔴 Pic\", \"✅ Normal\")"
+            ]
+          },
+          {
+            "name": "Appels Service Principal",
+            "expression": [
+              "CALCULATE(",
+              "    [Total Evenements],",
+              "    ActivityEvents[UserType] = \"ServicePrincipal\"",
+              ")"
+            ],
+            "formatString": "#,0"
+          },
+          {
+            "name": "% Appels Automatises",
+            "expression": "DIVIDE([Appels Service Principal], [Total Evenements])",
+            "formatString": "0.00%;-0.00%;0.00%"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "rel_DimDate_ActivityEvents",
+        "fromTable": "ActivityEvents",
+        "fromColumn": "DateKey",
+        "toTable": "DimDate",
+        "toColumn": "Date"
+      }
+    ]
+  }
+}

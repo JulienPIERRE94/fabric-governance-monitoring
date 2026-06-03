@@ -1,0 +1,50 @@
+table FabricItems
+	lineageTag: 94b89356-240c-49a9-90c5-0df12dfcc087
+
+	column id
+		dataType: string
+		lineageTag: f94445e2-eb30-4227-993b-6314ede2c943
+		sourceColumn: id
+
+	column type
+		dataType: string
+		lineageTag: c0910670-9752-4cf4-b1b8-e26deeeacdd6
+		sourceColumn: type
+
+	column name
+		dataType: string
+		lineageTag: 294875d3-5f13-425d-a619-546072171a67
+		sourceColumn: name
+
+	column workspaceId
+		dataType: string
+		lineageTag: 355b35a3-85c4-415b-aa79-ee0947cca687
+		sourceColumn: workspaceId
+
+	column state
+		dataType: string
+		lineageTag: 9fdda9ed-c04d-4e5d-a888-7c8e4be5dc19
+		sourceColumn: state
+
+	column description
+		dataType: string
+		lineageTag: 4982b332-aa94-4351-8cde-b5439b5b01a5
+		sourceColumn: description
+
+	partition FabricItems = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\fabric_items.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {
+				        {"id", type text},
+				        {"type", type text},
+				        {"name", type text},
+				        {"workspaceId", type text},
+				        {"state", type text},
+				        {"description", type text}
+				    })
+				in
+				    Typed
+

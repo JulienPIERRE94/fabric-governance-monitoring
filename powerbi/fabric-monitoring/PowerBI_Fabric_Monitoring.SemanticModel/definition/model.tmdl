@@ -1,0 +1,21 @@
+model Model
+	culture: fr-FR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: fr-FR
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["DataFolder","FabricWorkspaces","FabricItems","FabricCapacities","FabricRefreshables","FabricRefreshablesHistory","FabricActivities","FabricActivitiesArchive"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table FabricWorkspaces
+ref table FabricItems
+ref table FabricCapacities
+ref table FabricRefreshables
+ref table FabricRefreshablesHistory
+ref table FabricActivities
+ref table FabricActivitiesArchive
+ref table _FabricMeasures
+

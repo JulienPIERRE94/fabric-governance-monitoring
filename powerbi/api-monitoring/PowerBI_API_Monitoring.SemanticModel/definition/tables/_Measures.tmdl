@@ -1,0 +1,119 @@
+table _Measures
+	lineageTag: 7ed07dce-e8f3-4b03-b023-dd4a9b5aac05
+
+	measure 'Total Evenements' = COUNTROWS(ActivityEvents)
+		formatString: #,0
+		lineageTag: 98463408-7483-4da8-9bec-44eafdb3ae74
+
+	measure 'Utilisateurs Distincts' = DISTINCTCOUNT(ActivityEvents[UserId])
+		formatString: #,0
+		lineageTag: 4302e565-42a5-4b0f-b676-f65cab39df56
+
+	measure 'Workspaces Actifs' = DISTINCTCOUNT(ActivityEvents[WorkspaceId])
+		formatString: #,0
+		lineageTag: 5d752aa6-363f-4140-8e34-8c8229b2146b
+
+	measure 'Datasets Utilises' = DISTINCTCOUNT(ActivityEvents[DatasetId])
+		formatString: #,0
+		lineageTag: 44941021-e01a-4bbe-b3a9-892924f1b95b
+
+	measure 'Rapports Consultes' =
+			CALCULATE(
+			    DISTINCTCOUNT(ActivityEvents[ReportId]),
+			    ActivityEvents[OperationCategory] = "Consultation"
+			)
+		formatString: #,0
+		lineageTag: 91be3168-a168-47df-88d4-0f712d698a42
+
+	measure 'Appels API' =
+			CALCULATE(
+			    [Total Evenements],
+			    ActivityEvents[OperationCategory] IN { "API Read", "API Write" }
+			)
+		formatString: #,0
+		lineageTag: 1fff90d3-e4b0-4834-9f4f-f9d69217e9cd
+
+	measure 'Refresh Datasets' = CALCULATE([Total Evenements], ActivityEvents[OperationCategory] = "Refresh")
+		formatString: #,0
+		lineageTag: fff46936-6afd-4d7c-8712-b9c349befef1
+
+	measure Exports = CALCULATE([Total Evenements], ActivityEvents[OperationCategory] = "Export")
+		formatString: #,0
+		lineageTag: 203facea-c64c-4263-9eeb-27a7ae06130c
+
+	measure Consultations = CALCULATE([Total Evenements], ActivityEvents[OperationCategory] = "Consultation")
+		formatString: #,0
+		lineageTag: bb8e78ea-19a9-4fdf-b389-4b78f1fc286e
+
+	measure 'Taux Succes' =
+			DIVIDE(
+			    CALCULATE([Total Evenements], ActivityEvents[IsSuccess] = TRUE()),
+			    [Total Evenements]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: d637dbe7-8257-42c6-b29e-5709953b54b2
+
+	measure Echecs = CALCULATE([Total Evenements], ActivityEvents[IsSuccess] = FALSE())
+		formatString: #,0
+		lineageTag: 1720249d-f928-4e67-8d74-70fbb8c23f3a
+
+	measure 'Taux Echecs Refresh' =
+			VAR _refresh = [Refresh Datasets]
+			VAR _failed =
+			    CALCULATE(
+			        [Total Evenements],
+			        ActivityEvents[OperationCategory] = "Refresh",
+			        ActivityEvents[IsSuccess] = FALSE()
+			    )
+			RETURN DIVIDE(_failed, _refresh)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 857fa465-8e09-44c3-9824-ca5a80472f46
+
+	measure 'Evenements Jour Precedent' = CALCULATE([Total Evenements], DATEADD(DimDate[Date], -1, DAY))
+		formatString: #,0
+		lineageTag: 13f8b6a9-522e-47ef-ad99-d429c01f36b0
+
+	measure 'Evolution % vs J-1' =
+			DIVIDE(
+			    [Total Evenements] - [Evenements Jour Precedent],
+			    [Evenements Jour Precedent]
+			)
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 9888d3a6-126c-4b4b-948d-e601c7093798
+
+	measure 'Moyenne Mobile 7j' =
+			AVERAGEX(
+			    DATESINPERIOD(DimDate[Date], MAX(DimDate[Date]), -7, DAY),
+			    [Total Evenements]
+			)
+		formatString: #,0.00
+		lineageTag: 8f6b3cbc-8a12-4722-8d9a-116b4f6c4599
+
+	measure 'Pic Detecte' =
+			VAR _avg = [Moyenne Mobile 7j]
+			VAR _today = [Total Evenements]
+			RETURN IF(_today > _avg * 1.5, "🔴 Pic", "✅ Normal")
+		lineageTag: da94d218-9924-4764-b314-da3b025b3b5d
+
+	measure 'Appels Service Principal' =
+			CALCULATE(
+			    [Total Evenements],
+			    ActivityEvents[UserType] = "ServicePrincipal"
+			)
+		formatString: #,0
+		lineageTag: 9c926307-ddb1-430d-aff2-3999e7b75f57
+
+	measure '% Appels Automatises' = DIVIDE([Appels Service Principal], [Total Evenements])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 92caffc2-6b1d-4175-b6f0-8a18b9e9ff8d
+
+	column Marqueur
+		dataType: string
+		isHidden
+		lineageTag: 432ab512-a3bf-4812-b542-ecfad141208a
+		sourceColumn: [Marqueur]
+
+	partition _Measures = calculated
+		mode: import
+		source = ROW("Marqueur", "_")
+

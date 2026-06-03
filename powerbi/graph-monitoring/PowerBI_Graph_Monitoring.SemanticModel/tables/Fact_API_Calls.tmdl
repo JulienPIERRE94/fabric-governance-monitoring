@@ -1,0 +1,124 @@
+table Fact_API_Calls
+
+	column CallId
+		dataType: string
+		isKey
+		sourceColumn: CallId
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		sourceColumn: Timestamp
+
+	column AppId
+		dataType: string
+		sourceColumn: AppId
+
+	column UserId
+		dataType: string
+		sourceColumn: UserId
+
+	column RequestUri
+		dataType: string
+		sourceColumn: RequestUri
+
+	column Endpoint
+		dataType: string
+		sourceColumn: Endpoint
+
+	column HttpMethod
+		dataType: string
+		sourceColumn: HttpMethod
+
+	column StatusCode
+		dataType: int64
+		sourceColumn: StatusCode
+
+	column DurationMs
+		dataType: int64
+		sourceColumn: DurationMs
+
+	column IpAddress
+		dataType: string
+		sourceColumn: IpAddress
+
+	column UserAgent
+		dataType: string
+		sourceColumn: UserAgent
+
+	column ResourceTenantId
+		dataType: string
+		sourceColumn: ResourceTenantId
+
+	column OperationId
+		dataType: string
+		sourceColumn: OperationId
+
+	column TimestampDate = DATE(YEAR([Timestamp]), MONTH([Timestamp]), DAY([Timestamp]))
+		dataType: dateTime
+		formatString: Short Date
+		isHidden
+
+	column IsError = IF([StatusCode] >= 400, TRUE(), FALSE())
+		dataType: boolean
+
+	column EndpointCategory =
+			SWITCH(
+			    TRUE(),
+			    CONTAINSSTRING([RequestUri], "/users"),     "Identity",
+			    CONTAINSSTRING([RequestUri], "/groups"),    "Identity",
+			    CONTAINSSTRING([RequestUri], "/applications"), "Identity",
+			    CONTAINSSTRING([RequestUri], "/servicePrincipals"), "Identity",
+			    CONTAINSSTRING([RequestUri], "/directoryRoles"), "Identity",
+			    CONTAINSSTRING([RequestUri], "/messages"),  "Mail",
+			    CONTAINSSTRING([RequestUri], "/sendMail"),  "Mail",
+			    CONTAINSSTRING([RequestUri], "/calendars"), "Calendar",
+			    CONTAINSSTRING([RequestUri], "/contacts"),  "Calendar",
+			    CONTAINSSTRING([RequestUri], "/drive"),     "Files",
+			    CONTAINSSTRING([RequestUri], "/teams"),     "Teams",
+			    CONTAINSSTRING([RequestUri], "/chats"),     "Teams",
+			    CONTAINSSTRING([RequestUri], "/channels"),  "Teams",
+			    CONTAINSSTRING([RequestUri], "/reports"),   "Reports",
+			    CONTAINSSTRING([RequestUri], "/auditLogs"), "Security",
+			    "Other"
+			)
+		dataType: string
+
+	partition Fact_API_Calls = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\graph_activity_logs.csv",
+				    HasContent = try File.Contents(FilePath) otherwise null,
+				    Empty = #table(
+				        type table [
+				            CallId=text, Timestamp=datetime, AppId=text, UserId=text,
+				            RequestUri=text, Endpoint=text, HttpMethod=text, StatusCode=Int64.Type,
+				            DurationMs=Int64.Type, IpAddress=text, UserAgent=text,
+				            ResourceTenantId=text, OperationId=text
+				        ],
+				        {}
+				    ),
+				    Result = if HasContent = null then Empty else
+				        let
+				            Source  = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed   = Table.TransformColumnTypes(Headers, {
+				                {"CallId",            type text},
+				                {"Timestamp",         type datetime},
+				                {"AppId",             type text},
+				                {"UserId",            type text},
+				                {"RequestUri",        type text},
+				                {"Endpoint",          type text},
+				                {"HttpMethod",        type text},
+				                {"StatusCode",        Int64.Type},
+				                {"DurationMs",        Int64.Type},
+				                {"IpAddress",         type text},
+				                {"UserAgent",         type text},
+				                {"ResourceTenantId",  type text},
+				                {"OperationId",       type text}
+				            })
+				        in Typed
+				in
+				    Result
+

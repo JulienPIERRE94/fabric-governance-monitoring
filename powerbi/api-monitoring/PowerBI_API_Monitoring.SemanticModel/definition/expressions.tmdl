@@ -1,0 +1,7 @@
+expression CsvPath = "C:\Users\Julien.SQL2022\Desktop\CA\CA-GIP\PowerBI_ActivityEvents_Sample.csv" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: d150cd21-489d-47e0-b285-8010c2ae6460
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+

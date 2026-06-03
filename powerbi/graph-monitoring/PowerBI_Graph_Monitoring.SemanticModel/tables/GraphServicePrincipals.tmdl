@@ -1,0 +1,49 @@
+table GraphServicePrincipals
+
+	column id
+		dataType: string
+		sourceColumn: id
+
+	column appId
+		dataType: string
+		sourceColumn: appId
+
+	column displayName
+		dataType: string
+		sourceColumn: displayName
+
+	column servicePrincipalType
+		dataType: string
+		sourceColumn: servicePrincipalType
+
+	column accountEnabled
+		dataType: boolean
+		sourceColumn: accountEnabled
+
+	column appOwnerOrganizationId
+		dataType: string
+		sourceColumn: appOwnerOrganizationId
+
+	partition GraphServicePrincipals = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\graph_serviceprincipals.csv",
+				    Empty = #table(type table [id=text, appId=text, displayName=text, servicePrincipalType=text, accountEnabled=logical, appOwnerOrganizationId=text], {}),
+				    Result = try
+				        let
+				            Source = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed = Table.TransformColumnTypes(Headers, {
+				                {"id", type text},
+				                {"appId", type text},
+				                {"displayName", type text},
+				                {"servicePrincipalType", type text},
+				                {"accountEnabled", type logical},
+				                {"appOwnerOrganizationId", type text}
+				            })
+				        in Typed
+				    otherwise Empty
+				in
+				    Result
+

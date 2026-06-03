@@ -1,0 +1,33 @@
+model Model
+	culture: fr-FR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: fr-FR
+
+annotation PBI_QueryOrder = ["DataFolder","TenantId","ClientId","ClientSecret","fnGetGraphToken","fnGetGraphPaged","GraphUsers","GraphSignIns","GraphServicePrincipals","Fact_API_Calls","Dim_Application","Dim_User","Dim_Endpoint","Dim_Time"]
+
+ref table GraphUsers
+ref table GraphSignIns
+ref table GraphServicePrincipals
+ref table Fact_API_Calls
+ref table Dim_Application
+ref table Dim_User
+ref table Dim_Endpoint
+ref table Dim_Time
+ref table _GraphMeasures
+
+relationship 'Fact_API_Calls-Dim_Application'
+	fromColumn: Fact_API_Calls.AppId
+	toColumn: Dim_Application.AppId
+
+relationship 'Fact_API_Calls-Dim_User'
+	fromColumn: Fact_API_Calls.UserId
+	toColumn: Dim_User.UserId
+
+relationship 'Fact_API_Calls-Dim_Endpoint'
+	fromColumn: Fact_API_Calls.Endpoint
+	toColumn: Dim_Endpoint.Endpoint
+
+relationship 'Fact_API_Calls-Dim_Time'
+	fromColumn: Fact_API_Calls.TimestampDate
+	toColumn: Dim_Time.Date
+

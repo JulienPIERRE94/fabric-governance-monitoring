@@ -1,0 +1,97 @@
+table FabricActivitiesArchive
+
+	column Id
+		dataType: string
+		sourceColumn: Id
+
+	column CreationTime
+		dataType: dateTime
+		formatString: General Date
+		sourceColumn: CreationTime
+
+	column Operation
+		dataType: string
+		sourceColumn: Operation
+
+	column UserId
+		dataType: string
+		sourceColumn: UserId
+
+	column UserType
+		dataType: string
+		sourceColumn: UserType
+
+	column UserAgent
+		dataType: string
+		sourceColumn: UserAgent
+
+	column Activity
+		dataType: string
+		sourceColumn: Activity
+
+	column ItemName
+		dataType: string
+		sourceColumn: ItemName
+
+	column WorkspaceId
+		dataType: string
+		sourceColumn: WorkspaceId
+
+	column WorkSpaceName
+		dataType: string
+		sourceColumn: WorkSpaceName
+
+	column CapacityId
+		dataType: string
+		sourceColumn: CapacityId
+
+	column ObjectId
+		dataType: string
+		sourceColumn: ObjectId
+
+	column DatasetName
+		dataType: string
+		sourceColumn: DatasetName
+
+	column ReportName
+		dataType: string
+		sourceColumn: ReportName
+
+	column ClientIP
+		dataType: string
+		sourceColumn: ClientIP
+
+	partition FabricActivitiesArchive = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\fabric_activities_archive.csv",
+				    HasContent = try File.Contents(FilePath) otherwise null,
+				    Empty = #table(
+				        type table [Id=text, CreationTime=datetime, Operation=text, UserId=text, UserType=text, UserAgent=text, Activity=text, ItemName=text, WorkspaceId=text, WorkSpaceName=text, CapacityId=text, ObjectId=text, DatasetName=text, ReportName=text, ClientIP=text],
+				        {}
+				    ),
+				    Result = if HasContent = null then Empty else
+				        let
+				            Source = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed = Table.TransformColumnTypes(Headers, {
+				                {"Id", type text},
+				                {"CreationTime", type datetime},
+				                {"Operation", type text},
+				                {"UserId", type text},
+				                {"UserType", type text},
+				                {"UserAgent", type text},
+				                {"Activity", type text},
+				                {"ItemName", type text},
+				                {"WorkspaceId", type text},
+				                {"WorkSpaceName", type text},
+				                {"CapacityId", type text},
+				                {"ObjectId", type text},
+				                {"DatasetName", type text},
+				                {"ReportName", type text},
+				                {"ClientIP", type text}
+				            })
+				        in Typed
+				in
+				    Result

@@ -1,0 +1,291 @@
+table ActivityEvents
+	lineageTag: 9c9a2f3c-8ccd-4b84-8587-be52cb3db5eb
+
+	column Id
+		dataType: string
+		lineageTag: 44b49058-d05a-49db-a225-f12896c2446b
+		summarizeBy: none
+		sourceColumn: Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreationTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 9db35a9a-8214-4e1c-a848-46a2c07736bf
+		summarizeBy: none
+		sourceColumn: CreationTime
+
+		variation Variation
+			isDefault
+			relationship: 4c50f4a0-8621-47ae-9c31-ecdcafec6438
+			defaultHierarchy: LocalDateTable_7c8507bb-7ef8-4f09-b473-2445ae7a239c.'Hiérarchie de dates'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Operation
+		dataType: string
+		lineageTag: 7c1eb02d-99c2-471b-9937-1f75b788d069
+		summarizeBy: none
+		sourceColumn: Operation
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserId
+		dataType: string
+		lineageTag: a167315a-7be5-498b-b26b-edde3055feb3
+		summarizeBy: none
+		sourceColumn: UserId
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserType
+		dataType: string
+		lineageTag: 4395ed46-708b-442a-9c18-1ceb5238c8c9
+		summarizeBy: none
+		sourceColumn: UserType
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserKey
+		dataType: string
+		lineageTag: 3df8fa40-d3d8-4628-9734-e6cab33aca60
+		summarizeBy: none
+		sourceColumn: UserKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Activity
+		dataType: string
+		lineageTag: 11f69553-b759-4132-9c1e-3e0d5acb6c23
+		summarizeBy: none
+		sourceColumn: Activity
+
+		annotation SummarizationSetBy = Automatic
+
+	column ItemName
+		dataType: string
+		lineageTag: f41ad8df-730f-4b47-a218-7831304c18e9
+		summarizeBy: none
+		sourceColumn: ItemName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkSpaceName
+		dataType: string
+		lineageTag: 6501d4bf-6e7c-43f1-9f56-ada6a2b98abc
+		summarizeBy: none
+		sourceColumn: WorkSpaceName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		lineageTag: 7986e432-4c91-4e8a-b7a8-5ab546181476
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ObjectId
+		dataType: string
+		lineageTag: 97ec22b8-2505-47d5-ba7e-ad5a53969cb4
+		summarizeBy: none
+		sourceColumn: ObjectId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatasetName
+		dataType: string
+		lineageTag: ebb03399-5785-499d-b39f-015ae4ac6efd
+		summarizeBy: none
+		sourceColumn: DatasetName
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatasetId
+		dataType: string
+		lineageTag: e60ba6a3-bc7e-4773-9395-89020fe83194
+		summarizeBy: none
+		sourceColumn: DatasetId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportName
+		dataType: string
+		lineageTag: e55fd547-cdf3-4012-9e93-831d95df7b07
+		summarizeBy: none
+		sourceColumn: ReportName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportId
+		dataType: string
+		lineageTag: 1ef1bb64-0c77-46b9-905d-09b5331c5939
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportType
+		dataType: string
+		lineageTag: e959af9b-ca96-4535-bcb4-8b67c8ee9de6
+		summarizeBy: none
+		sourceColumn: ReportType
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		lineageTag: c5963f8b-838e-438b-9285-d94b35422fc3
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityName
+		dataType: string
+		lineageTag: 21bf364e-8e71-47ba-b33c-69a83b614f8c
+		summarizeBy: none
+		sourceColumn: CapacityName
+
+		annotation SummarizationSetBy = Automatic
+
+	column ClientIP
+		dataType: string
+		lineageTag: 569ff9b1-a20e-4c69-9cd5-5869f2a10a1f
+		summarizeBy: none
+		sourceColumn: ClientIP
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserAgent
+		dataType: string
+		lineageTag: 31875f63-da9a-4073-a0b2-85660d1baeb5
+		summarizeBy: none
+		sourceColumn: UserAgent
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsSuccess
+		dataType: boolean
+		lineageTag: 2c141147-1cf5-49c0-9641-4f430c605a7c
+		summarizeBy: none
+		sourceColumn: IsSuccess
+
+		annotation SummarizationSetBy = Automatic
+
+	column RequestId
+		dataType: string
+		lineageTag: de981001-a5ac-4411-9c7f-bd7666a6ba2c
+		summarizeBy: none
+		sourceColumn: RequestId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActivityId
+		dataType: string
+		lineageTag: 8f2e9391-5ad4-448b-932d-bfd1e11f2887
+		summarizeBy: none
+		sourceColumn: ActivityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DistributionMethod
+		dataType: string
+		lineageTag: 36937015-dd3f-494a-b9d8-84e144ec3f3e
+		summarizeBy: none
+		sourceColumn: DistributionMethod
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsumptionMethod
+		dataType: string
+		lineageTag: d5b15457-e51e-4b79-8933-adfd6a6b2686
+		summarizeBy: none
+		sourceColumn: ConsumptionMethod
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 1c23051b-18f6-49f0-a01f-41da1c7e419f
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column HourOfDay
+		dataType: int64
+		formatString: 0
+		lineageTag: ae360447-5660-4756-a930-58c7e091bee4
+		summarizeBy: sum
+		sourceColumn: HourOfDay
+
+		annotation SummarizationSetBy = Automatic
+
+	column DayOfWeek
+		dataType: string
+		lineageTag: 0c0ec00a-4bc2-4cd4-8352-711369f46329
+		summarizeBy: none
+		sourceColumn: DayOfWeek
+
+		annotation SummarizationSetBy = Automatic
+
+	column OperationCategory
+		dataType: string
+		lineageTag: b9ac74f1-420f-451b-a8b8-f68a5e2dd850
+		summarizeBy: none
+		sourceColumn: OperationCategory
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ActivityEvents = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(CsvPath), [Delimiter=";", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {
+				        {"Id", type text},
+				        {"CreationTime", type datetime},
+				        {"Operation", type text},
+				        {"UserId", type text},
+				        {"UserType", type text},
+				        {"UserKey", type text},
+				        {"Activity", type text},
+				        {"ItemName", type text},
+				        {"WorkSpaceName", type text},
+				        {"WorkspaceId", type text},
+				        {"ObjectId", type text},
+				        {"DatasetName", type text},
+				        {"DatasetId", type text},
+				        {"ReportName", type text},
+				        {"ReportId", type text},
+				        {"ReportType", type text},
+				        {"CapacityId", type text},
+				        {"CapacityName", type text},
+				        {"ClientIP", type text},
+				        {"UserAgent", type text},
+				        {"IsSuccess", type logical},
+				        {"RequestId", type text},
+				        {"ActivityId", type text},
+				        {"DistributionMethod", type text},
+				        {"ConsumptionMethod", type text}
+				    }),
+				    AddDate = Table.AddColumn(Typed, "DateKey", each DateTime.Date([CreationTime]), type date),
+				    AddHour = Table.AddColumn(AddDate, "HourOfDay", each Time.Hour([CreationTime]), Int64.Type),
+				    AddDayName = Table.AddColumn(AddHour, "DayOfWeek", each Date.DayOfWeekName([DateKey]), type text),
+				    AddCategory = Table.AddColumn(AddDayName, "OperationCategory", each
+				        if Text.Contains([Operation], "Refresh") then "Refresh"
+				        else if Text.Contains([Operation], "View") then "Consultation"
+				        else if Text.Contains([Operation], "Export") then "Export"
+				        else if Text.Contains([Operation], "Get") then "API Read"
+				        else if Text.Contains([Operation], "Create") or Text.Contains([Operation], "Update") or Text.Contains([Operation], "Delete") then "API Write"
+				        else "Autre", type text)
+				in
+				    AddCategory
+

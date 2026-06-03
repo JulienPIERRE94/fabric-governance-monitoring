@@ -1,0 +1,48 @@
+table Dim_Application
+
+	column AppId
+		dataType: string
+		isKey
+		sourceColumn: AppId
+
+	column AppDisplayName
+		dataType: string
+		sourceColumn: AppDisplayName
+
+	column ServicePrincipalType
+		dataType: string
+		sourceColumn: ServicePrincipalType
+
+	column AppOwnerTenantId
+		dataType: string
+		sourceColumn: AppOwnerTenantId
+
+	column IsExternal
+		dataType: boolean
+		sourceColumn: IsExternal
+
+	partition Dim_Application = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\graph_dim_application.csv",
+				    HasContent = try File.Contents(FilePath) otherwise null,
+				    Empty = #table(
+				        type table [AppId=text, AppDisplayName=text, ServicePrincipalType=text, AppOwnerTenantId=text, IsExternal=logical],
+				        {}
+				    ),
+				    Result = if HasContent = null then Empty else
+				        let
+				            Source  = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed   = Table.TransformColumnTypes(Headers, {
+				                {"AppId",                type text},
+				                {"AppDisplayName",       type text},
+				                {"ServicePrincipalType", type text},
+				                {"AppOwnerTenantId",     type text},
+				                {"IsExternal",           type logical}
+				            })
+				        in Typed
+				in
+				    Result
+

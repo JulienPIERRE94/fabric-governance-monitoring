@@ -1,0 +1,44 @@
+table FabricWorkspaces
+	lineageTag: c401a4ed-0e4c-4776-9557-a1c933b17c98
+
+	column id
+		dataType: string
+		lineageTag: 336b2835-66b1-4322-a95f-f1a3a44c2079
+		sourceColumn: id
+
+	column name
+		dataType: string
+		lineageTag: 326c2fde-82dd-4f71-90d7-4311a40019b4
+		sourceColumn: name
+
+	column type
+		dataType: string
+		lineageTag: 266dfd93-8d4a-4bd0-99c0-6e2908d13378
+		sourceColumn: type
+
+	column state
+		dataType: string
+		lineageTag: 5ecf22b8-da28-415e-ad2e-4dc105b4768a
+		sourceColumn: state
+
+	column capacityId
+		dataType: string
+		lineageTag: 242df2c8-c91e-4142-9d44-6349d1709bfa
+		sourceColumn: capacityId
+
+	partition FabricWorkspaces = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\fabric_workspaces.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {
+				        {"id", type text},
+				        {"name", type text},
+				        {"type", type text},
+				        {"state", type text},
+				        {"capacityId", type text}
+				    })
+				in
+				    Typed
+

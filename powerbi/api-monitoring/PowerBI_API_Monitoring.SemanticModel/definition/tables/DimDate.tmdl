@@ -1,0 +1,62 @@
+table DimDate
+	lineageTag: 5ebae571-7fe1-4ab5-b373-046beb67c3dc
+
+	column Date
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 5bb49aee-f557-4c31-9a00-08c16f13c4c3
+		summarizeBy: none
+		sourceColumn: [Date]
+
+		variation Variation
+			isDefault
+			relationship: a194c2b1-a3b4-489b-bc7c-586c67938ed9
+			defaultHierarchy: LocalDateTable_b7083ebd-5b8f-418c-9a8f-6f74131b142e.'Hiérarchie de dates'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Annee
+		dataType: int64
+		formatString: 0
+		lineageTag: 71d716c3-cb6e-47bc-be15-32427a9fb667
+		summarizeBy: sum
+		sourceColumn: [Annee]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mois
+		dataType: string
+		lineageTag: f5444e60-2c6d-46f0-ae2a-271c512be63e
+		summarizeBy: none
+		sourceColumn: [Mois]
+
+		annotation SummarizationSetBy = Automatic
+
+	column JourSemaine
+		dataType: string
+		lineageTag: 724c7d0f-820d-4587-8540-e6118947b254
+		summarizeBy: none
+		sourceColumn: [JourSemaine]
+
+		annotation SummarizationSetBy = Automatic
+
+	column NumJour
+		dataType: int64
+		formatString: 0
+		lineageTag: b561b3c4-0f7f-4e69-8fb5-3e39bcbcb74b
+		summarizeBy: sum
+		sourceColumn: [NumJour]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimDate = calculated
+		mode: import
+		source =
+				ADDCOLUMNS(
+				    CALENDAR(MIN(ActivityEvents[DateKey]), MAX(ActivityEvents[DateKey])),
+				    "Annee", YEAR([Date]),
+				    "Mois", FORMAT([Date], "yyyy-MM"),
+				    "JourSemaine", FORMAT([Date], "dddd"),
+				    "NumJour", WEEKDAY([Date], 2)
+				)
+

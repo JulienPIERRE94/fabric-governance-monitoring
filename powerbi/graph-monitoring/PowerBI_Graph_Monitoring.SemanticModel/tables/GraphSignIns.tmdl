@@ -1,0 +1,68 @@
+table GraphSignIns
+
+	column id
+		dataType: string
+		sourceColumn: id
+
+	column createdDateTime
+		dataType: dateTime
+		formatString: General Date
+		sourceColumn: createdDateTime
+
+	column userPrincipalName
+		dataType: string
+		sourceColumn: userPrincipalName
+
+	column userId
+		dataType: string
+		sourceColumn: userId
+
+	column appDisplayName
+		dataType: string
+		sourceColumn: appDisplayName
+
+	column appId
+		dataType: string
+		sourceColumn: appId
+
+	column ipAddress
+		dataType: string
+		sourceColumn: ipAddress
+
+	column clientAppUsed
+		dataType: string
+		sourceColumn: clientAppUsed
+
+	column isInteractive
+		dataType: boolean
+		sourceColumn: isInteractive
+
+	partition GraphSignIns = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\graph_signins.csv",
+				    Empty = #table(
+				        type table [id=text, createdDateTime=datetime, userPrincipalName=text, userId=text, appDisplayName=text, appId=text, ipAddress=text, clientAppUsed=text, isInteractive=logical],
+				        {}
+				    ),
+				    Result = try
+				        let
+				            Source = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed = Table.TransformColumnTypes(Headers, {
+				                {"id", type text},
+				                {"createdDateTime", type datetime},
+				                {"userPrincipalName", type text},
+				                {"userId", type text},
+				                {"appDisplayName", type text},
+				                {"appId", type text},
+				                {"ipAddress", type text},
+				                {"clientAppUsed", type text},
+				                {"isInteractive", type logical}
+				            })
+				        in Typed
+				    otherwise Empty
+				in
+				    Result
+

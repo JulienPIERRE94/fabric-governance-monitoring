@@ -1,0 +1,42 @@
+table FabricCapacities
+
+	column id
+		dataType: string
+		sourceColumn: id
+
+	column displayName
+		dataType: string
+		sourceColumn: displayName
+
+	column sku
+		dataType: string
+		sourceColumn: sku
+
+	column state
+		dataType: string
+		sourceColumn: state
+
+	column region
+		dataType: string
+		sourceColumn: region
+
+	column admins
+		dataType: string
+		sourceColumn: admins
+
+	partition FabricCapacities = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\fabric_capacities.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Headers, {
+				        {"id", type text},
+				        {"displayName", type text},
+				        {"sku", type text},
+				        {"state", type text},
+				        {"region", type text},
+				        {"admins", type text}
+				    })
+				in
+				    Typed

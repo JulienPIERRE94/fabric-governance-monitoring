@@ -1,0 +1,101 @@
+table _FabricMeasures
+
+	measure 'Total Workspaces' = COUNTROWS(FabricWorkspaces)
+		formatString: #,0
+
+	measure 'Workspaces Actifs' = CALCULATE(COUNTROWS(FabricWorkspaces), FabricWorkspaces[state] = "Active")
+		formatString: #,0
+
+	measure 'Total Items' = COUNTROWS(FabricItems)
+		formatString: #,0
+
+	measure 'Items par Type' = DISTINCTCOUNT(FabricItems[type])
+		formatString: #,0
+
+	measure 'Total Capacites' = COUNTROWS(FabricCapacities)
+		formatString: #,0
+
+	measure 'Capacites Actives' = CALCULATE(COUNTROWS(FabricCapacities), FabricCapacities[state] = "Active")
+		formatString: #,0
+
+	measure 'Total Refreshables' = COUNTROWS(FabricRefreshables)
+		formatString: #,0
+
+	measure 'Refresh / Jour Moyen' = AVERAGE(FabricRefreshables[refreshesPerDay])
+		formatString: #,0.00
+
+	measure 'Echecs Refresh' = SUM(FabricRefreshables[refreshFailures])
+		formatString: #,0
+
+	measure 'Taux Echec Refresh %' =
+			DIVIDE(
+			    SUM(FabricRefreshables[refreshFailures]),
+			    SUM(FabricRefreshables[refreshCount])
+			)
+		formatString: 0.00%
+
+	measure 'Duree Moyenne Refresh (s)' = AVERAGE(FabricRefreshables[averageDuration])
+		formatString: #,0.0
+
+	measure 'Total Activites' = COUNTROWS(FabricActivities)
+		formatString: #,0
+
+	measure 'Utilisateurs Distincts' = DISTINCTCOUNT(FabricActivities[UserId])
+		formatString: #,0
+
+	measure 'Operations Distinctes' = DISTINCTCOUNT(FabricActivities[Operation])
+		formatString: #,0
+
+	measure 'Total Activites Archive' = COUNTROWS(FabricActivitiesArchive)
+		formatString: #,0
+
+	measure 'Utilisateurs Distincts Archive' = DISTINCTCOUNT(FabricActivitiesArchive[UserId])
+		formatString: #,0
+
+	measure 'Activites 7j' =
+			CALCULATE(
+			    COUNTROWS(FabricActivitiesArchive),
+			    FabricActivitiesArchive[CreationTime] >= TODAY() - 7
+			)
+		formatString: #,0
+
+	measure 'Activites 30j' =
+			CALCULATE(
+			    COUNTROWS(FabricActivitiesArchive),
+			    FabricActivitiesArchive[CreationTime] >= TODAY() - 30
+			)
+		formatString: #,0
+
+	measure 'Activites 90j' =
+			CALCULATE(
+			    COUNTROWS(FabricActivitiesArchive),
+			    FabricActivitiesArchive[CreationTime] >= TODAY() - 90
+			)
+		formatString: #,0
+
+	measure 'Snapshots Refresh' = COUNTROWS(FabricRefreshablesHistory)
+		formatString: #,0
+
+	measure 'Dernier Snapshot' = MAX(FabricRefreshablesHistory[SnapshotTime])
+		formatString: General Date
+
+	measure 'Refresh Count Delta' =
+			VAR _Last  = CALCULATE(SUM(FabricRefreshablesHistory[refreshCount]), FabricRefreshablesHistory[SnapshotTime] = MAX(FabricRefreshablesHistory[SnapshotTime]))
+			VAR _First = CALCULATE(SUM(FabricRefreshablesHistory[refreshCount]), FabricRefreshablesHistory[SnapshotTime] = MIN(FabricRefreshablesHistory[SnapshotTime]))
+			RETURN _Last - _First
+		formatString: #,0
+
+	measure 'Failures Delta' =
+			VAR _Last  = CALCULATE(SUM(FabricRefreshablesHistory[refreshFailures]), FabricRefreshablesHistory[SnapshotTime] = MAX(FabricRefreshablesHistory[SnapshotTime]))
+			VAR _First = CALCULATE(SUM(FabricRefreshablesHistory[refreshFailures]), FabricRefreshablesHistory[SnapshotTime] = MIN(FabricRefreshablesHistory[SnapshotTime]))
+			RETURN _Last - _First
+		formatString: #,0
+
+	column Marqueur
+		dataType: string
+		isHidden
+		sourceColumn: [Marqueur]
+
+	partition _FabricMeasures = calculated
+		mode: import
+		source = ROW("Marqueur", "_")

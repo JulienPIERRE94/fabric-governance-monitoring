@@ -1,0 +1,53 @@
+table Dim_Endpoint
+
+	column Endpoint
+		dataType: string
+		isKey
+		sourceColumn: Endpoint
+
+	column Category
+		dataType: string
+		sourceColumn: Category
+
+	column SubCategory
+		dataType: string
+		sourceColumn: SubCategory
+
+	column ApiVersion
+		dataType: string
+		sourceColumn: ApiVersion
+
+	column IsWriteOperation
+		dataType: boolean
+		sourceColumn: IsWriteOperation
+
+	column Description
+		dataType: string
+		sourceColumn: Description
+
+	partition Dim_Endpoint = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\graph_dim_endpoint.csv",
+				    HasContent = try File.Contents(FilePath) otherwise null,
+				    Empty = #table(
+				        type table [Endpoint=text, Category=text, SubCategory=text, ApiVersion=text, IsWriteOperation=logical, Description=text],
+				        {}
+				    ),
+				    Result = if HasContent = null then Empty else
+				        let
+				            Source  = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed   = Table.TransformColumnTypes(Headers, {
+				                {"Endpoint",          type text},
+				                {"Category",          type text},
+				                {"SubCategory",       type text},
+				                {"ApiVersion",        type text},
+				                {"IsWriteOperation",  type logical},
+				                {"Description",       type text}
+				            })
+				        in Typed
+				in
+				    Result
+

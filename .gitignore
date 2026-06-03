@@ -1,0 +1,34 @@
+# ── Power BI / Fabric ───────────────────────────────────────────────────────
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+**/.pbi/
+
+# ── Secrets & credentials (JAMAIS versionnés) ───────────────────────────────
+secrets/
+*.credentials.json
+*.token
+*.key
+
+# ── Données extraites (régénérables via scripts) ─────────────────────────────
+data/graph/*.csv
+data/graph/*.json
+data/fabric/*.csv
+data/fabric/*.json
+logs/
+
+# ── Environnement Python ─────────────────────────────────────────────────────
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# ── Fichiers temporaires Office ──────────────────────────────────────────────
+~$*
+*.tmp
+
+# ── Rapports d'audit horodatés ───────────────────────────────────────────────
+PowerBI_Connection_Audit_*.csv
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

@@ -1,0 +1,120 @@
+table FabricRefreshables
+	lineageTag: b6ad0c00-91ef-4bfa-83d4-c62d6ae4c6a0
+
+	column id
+		dataType: string
+		lineageTag: 09b1ba1a-da7c-4848-a22e-515bb8fd2c30
+		sourceColumn: id
+
+	column name
+		dataType: string
+		lineageTag: 38699fc4-a07e-4797-a4b1-38af800c989b
+		sourceColumn: name
+
+	column kind
+		dataType: string
+		lineageTag: 60be0770-e56a-428c-8b11-d91c4442848d
+		sourceColumn: kind
+
+	column startTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6754502a-a7b3-4639-8982-c37791e7c613
+		sourceColumn: startTime
+
+	column endTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 59884bbc-8a40-48d1-b42c-8a9f3bdf3885
+		sourceColumn: endTime
+
+	column refreshCount
+		dataType: int64
+		formatString: 0
+		lineageTag: bc73abf6-4902-4366-83c8-e81e87498f24
+		sourceColumn: refreshCount
+
+	column refreshFailures
+		dataType: int64
+		formatString: 0
+		lineageTag: 1f62d1ef-eddf-4500-a55d-bc59e8481ed8
+		sourceColumn: refreshFailures
+
+	column averageDuration
+		dataType: double
+		formatString: #,0.00
+		lineageTag: da660a41-7ac9-4849-9d3e-80525ac305dd
+		sourceColumn: averageDuration
+
+	column medianDuration
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 1b205ad3-dcf3-4b6c-9251-f7611e7e2a88
+		sourceColumn: medianDuration
+
+	column refreshesPerDay
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 1e824f91-b963-467f-8cdf-28b3f0ddb331
+		sourceColumn: refreshesPerDay
+
+	column capacityId
+		dataType: string
+		lineageTag: c597a770-d596-4c83-83b3-54465b50dda5
+		sourceColumn: capacityId
+
+	column capacityName
+		dataType: string
+		lineageTag: f4923fa8-e276-4ca6-a2e9-69cdb39f82e6
+		sourceColumn: capacityName
+
+	column workspaceId
+		dataType: string
+		lineageTag: 9fa2d6c5-7513-4496-9967-75a30edce8fa
+		sourceColumn: workspaceId
+
+	column workspaceName
+		dataType: string
+		lineageTag: 1f933e53-eea5-4a1f-ad90-96b6e325b780
+		sourceColumn: workspaceName
+
+	column configuredById
+		dataType: string
+		lineageTag: 48f30bd8-e8ec-440f-8277-01b08ff342d6
+		sourceColumn: configuredById
+
+	partition FabricRefreshables = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\fabric_refreshables.csv",
+				    HasContent = try File.Contents(FilePath) otherwise null,
+				    Empty = #table(
+				        type table [id=text, name=text, kind=text, startTime=datetime, endTime=datetime, refreshCount=Int64.Type, refreshFailures=Int64.Type, averageDuration=number, medianDuration=number, refreshesPerDay=number, capacityId=text, capacityName=text, workspaceId=text, workspaceName=text, configuredById=text],
+				        {}
+				    ),
+				    Result = if HasContent = null then Empty else
+				        let
+				            Source = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed = Table.TransformColumnTypes(Headers, {
+				                {"id", type text},
+				                {"name", type text},
+				                {"kind", type text},
+				                {"startTime", type datetime},
+				                {"endTime", type datetime},
+				                {"refreshCount", Int64.Type},
+				                {"refreshFailures", Int64.Type},
+				                {"averageDuration", type number},
+				                {"medianDuration", type number},
+				                {"refreshesPerDay", type number},
+				                {"capacityId", type text},
+				                {"capacityName", type text},
+				                {"workspaceId", type text},
+				                {"workspaceName", type text},
+				                {"configuredById", type text}
+				            }, "en-US")
+				        in Typed
+				in
+				    Result
+

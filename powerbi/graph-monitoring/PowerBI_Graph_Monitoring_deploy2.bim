@@ -1,0 +1,770 @@
+{
+  "name": "PowerBI_API_Monitoring_Graph",
+  "compatibilityLevel": 1600,
+  "model": {
+    "culture": "fr-FR",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "fr-FR",
+    "tables": [
+      {
+        "name": "GraphUsers",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "string",
+            "sourceColumn": "id"
+          },
+          {
+            "name": "displayName",
+            "dataType": "string",
+            "sourceColumn": "displayName"
+          },
+          {
+            "name": "userPrincipalName",
+            "dataType": "string",
+            "sourceColumn": "userPrincipalName"
+          },
+          {
+            "name": "mail",
+            "dataType": "string",
+            "sourceColumn": "mail"
+          },
+          {
+            "name": "jobTitle",
+            "dataType": "string",
+            "sourceColumn": "jobTitle"
+          },
+          {
+            "name": "department",
+            "dataType": "string",
+            "sourceColumn": "department"
+          },
+          {
+            "name": "accountEnabled",
+            "dataType": "boolean",
+            "sourceColumn": "accountEnabled"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "GraphUsers",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    FilePath = DataFolder & \"\\graph_users.csv\",\n    RawBytes = try File.Contents(FilePath) otherwise null,\n    IsEmpty = RawBytes = null or Binary.Length(RawBytes) = 0,\n    Empty = #table(type table [id=text, displayName=text, userPrincipalName=text, mail=text, jobTitle=text, department=text, accountEnabled=logical], {}),\n    Result = if IsEmpty then Empty else\n        let\n            Source = Csv.Document(RawBytes, [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n            Typed = Table.TransformColumnTypes(Headers, {\n                {\"id\", type text},\n                {\"displayName\", type text},\n                {\"userPrincipalName\", type text},\n                {\"mail\", type text},\n                {\"jobTitle\", type text},\n                {\"department\", type text},\n                {\"accountEnabled\", type logical}\n            })\n        in Typed\nin\n    Result"
+            }
+          }
+        ]
+      },
+      {
+        "name": "GraphSignIns",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "string",
+            "sourceColumn": "id"
+          },
+          {
+            "name": "createdDateTime",
+            "dataType": "dateTime",
+            "sourceColumn": "createdDateTime",
+            "formatString": "General Date"
+          },
+          {
+            "name": "userPrincipalName",
+            "dataType": "string",
+            "sourceColumn": "userPrincipalName"
+          },
+          {
+            "name": "userId",
+            "dataType": "string",
+            "sourceColumn": "userId"
+          },
+          {
+            "name": "appDisplayName",
+            "dataType": "string",
+            "sourceColumn": "appDisplayName"
+          },
+          {
+            "name": "appId",
+            "dataType": "string",
+            "sourceColumn": "appId"
+          },
+          {
+            "name": "ipAddress",
+            "dataType": "string",
+            "sourceColumn": "ipAddress"
+          },
+          {
+            "name": "clientAppUsed",
+            "dataType": "string",
+            "sourceColumn": "clientAppUsed"
+          },
+          {
+            "name": "isInteractive",
+            "dataType": "boolean",
+            "sourceColumn": "isInteractive"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "GraphSignIns",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    FilePath = DataFolder & \"\\graph_signins.csv\",\n    HasContent = try File.Contents(FilePath) otherwise null,\n    IsEmpty = HasContent = null or Binary.Length(HasContent) = 0,\n    Empty = #table(\n        type table [id=text, createdDateTime=datetime, userPrincipalName=text, userId=text, appDisplayName=text, appId=text, ipAddress=text, clientAppUsed=text, isInteractive=logical],\n        {}\n    ),\n    Result = if IsEmpty then Empty else\n        let\n            Source = Csv.Document(File.Contents(FilePath), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n            Typed = Table.TransformColumnTypes(Headers, {\n                {\"id\", type text},\n                {\"createdDateTime\", type datetime},\n                {\"userPrincipalName\", type text},\n                {\"userId\", type text},\n                {\"appDisplayName\", type text},\n                {\"appId\", type text},\n                {\"ipAddress\", type text},\n                {\"clientAppUsed\", type text},\n                {\"isInteractive\", type logical}\n            })\n        in Typed\nin\n    Result"
+            }
+          }
+        ]
+      },
+      {
+        "name": "GraphServicePrincipals",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "string",
+            "sourceColumn": "id"
+          },
+          {
+            "name": "appId",
+            "dataType": "string",
+            "sourceColumn": "appId"
+          },
+          {
+            "name": "displayName",
+            "dataType": "string",
+            "sourceColumn": "displayName"
+          },
+          {
+            "name": "servicePrincipalType",
+            "dataType": "string",
+            "sourceColumn": "servicePrincipalType"
+          },
+          {
+            "name": "accountEnabled",
+            "dataType": "boolean",
+            "sourceColumn": "accountEnabled"
+          },
+          {
+            "name": "appOwnerOrganizationId",
+            "dataType": "string",
+            "sourceColumn": "appOwnerOrganizationId"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "GraphServicePrincipals",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    FilePath = DataFolder & \"\\graph_serviceprincipals.csv\",\n    RawBytes = try File.Contents(FilePath) otherwise null,\n    IsEmpty = RawBytes = null or Binary.Length(RawBytes) = 0,\n    Empty = #table(type table [id=text, appId=text, displayName=text, servicePrincipalType=text, accountEnabled=logical, appOwnerOrganizationId=text], {}),\n    Result = if IsEmpty then Empty else\n        let\n            Source = Csv.Document(RawBytes, [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n            Typed = Table.TransformColumnTypes(Headers, {\n                {\"id\", type text},\n                {\"appId\", type text},\n                {\"displayName\", type text},\n                {\"servicePrincipalType\", type text},\n                {\"accountEnabled\", type logical},\n                {\"appOwnerOrganizationId\", type text}\n            })\n        in Typed\nin\n    Result"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Fact_API_Calls",
+        "columns": [
+          {
+            "name": "CallId",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "CallId"
+          },
+          {
+            "name": "Timestamp",
+            "dataType": "dateTime",
+            "sourceColumn": "Timestamp",
+            "formatString": "General Date"
+          },
+          {
+            "name": "AppId",
+            "dataType": "string",
+            "sourceColumn": "AppId"
+          },
+          {
+            "name": "UserId",
+            "dataType": "string",
+            "sourceColumn": "UserId"
+          },
+          {
+            "name": "RequestUri",
+            "dataType": "string",
+            "sourceColumn": "RequestUri"
+          },
+          {
+            "name": "Endpoint",
+            "dataType": "string",
+            "sourceColumn": "Endpoint"
+          },
+          {
+            "name": "HttpMethod",
+            "dataType": "string",
+            "sourceColumn": "HttpMethod"
+          },
+          {
+            "name": "StatusCode",
+            "dataType": "int64",
+            "sourceColumn": "StatusCode"
+          },
+          {
+            "name": "DurationMs",
+            "dataType": "int64",
+            "sourceColumn": "DurationMs"
+          },
+          {
+            "name": "IpAddress",
+            "dataType": "string",
+            "sourceColumn": "IpAddress"
+          },
+          {
+            "name": "UserAgent",
+            "dataType": "string",
+            "sourceColumn": "UserAgent"
+          },
+          {
+            "name": "ResourceTenantId",
+            "dataType": "string",
+            "sourceColumn": "ResourceTenantId"
+          },
+          {
+            "name": "OperationId",
+            "dataType": "string",
+            "sourceColumn": "OperationId"
+          },
+          {
+            "type": "calculated",
+            "name": "TimestampDate",
+            "dataType": "dateTime",
+            "isHidden": true,
+            "expression": "DATE(YEAR([Timestamp]), MONTH([Timestamp]), DAY([Timestamp]))",
+            "formatString": "Short Date"
+          },
+          {
+            "type": "calculated",
+            "name": "IsError",
+            "dataType": "boolean",
+            "expression": "IF([StatusCode] >= 400, TRUE(), FALSE())"
+          },
+          {
+            "type": "calculated",
+            "name": "EndpointCategory",
+            "dataType": "string",
+            "expression": "SWITCH(\n    TRUE(),\n    CONTAINSSTRING([RequestUri], \"/users\"),     \"Identity\",\n    CONTAINSSTRING([RequestUri], \"/groups\"),    \"Identity\",\n    CONTAINSSTRING([RequestUri], \"/applications\"), \"Identity\",\n    CONTAINSSTRING([RequestUri], \"/servicePrincipals\"), \"Identity\",\n    CONTAINSSTRING([RequestUri], \"/directoryRoles\"), \"Identity\",\n    CONTAINSSTRING([RequestUri], \"/messages\"),  \"Mail\",\n    CONTAINSSTRING([RequestUri], \"/sendMail\"),  \"Mail\",\n    CONTAINSSTRING([RequestUri], \"/calendars\"), \"Calendar\",\n    CONTAINSSTRING([RequestUri], \"/contacts\"),  \"Calendar\",\n    CONTAINSSTRING([RequestUri], \"/drive\"),     \"Files\",\n    CONTAINSSTRING([RequestUri], \"/teams\"),     \"Teams\",\n    CONTAINSSTRING([RequestUri], \"/chats\"),     \"Teams\",\n    CONTAINSSTRING([RequestUri], \"/channels\"),  \"Teams\",\n    CONTAINSSTRING([RequestUri], \"/reports\"),   \"Reports\",\n    CONTAINSSTRING([RequestUri], \"/auditLogs\"), \"Security\",\n    \"Other\"\n)"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Fact_API_Calls",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    FilePath = DataFolder & \"\\graph_activity_logs.csv\",\n    HasContent = try File.Contents(FilePath) otherwise null,\n    Empty = #table(\n        type table [\n            CallId=text, Timestamp=datetime, AppId=text, UserId=text,\n            RequestUri=text, Endpoint=text, HttpMethod=text, StatusCode=Int64.Type,\n            DurationMs=Int64.Type, IpAddress=text, UserAgent=text,\n            ResourceTenantId=text, OperationId=text\n        ],\n        {}\n    ),\n    Result = if HasContent = null then Empty else\n        let\n            Source  = Csv.Document(File.Contents(FilePath), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n            Typed   = Table.TransformColumnTypes(Headers, {\n                {\"CallId\",            type text},\n                {\"Timestamp\",         type datetime},\n                {\"AppId\",             type text},\n                {\"UserId\",            type text},\n                {\"RequestUri\",        type text},\n                {\"Endpoint\",          type text},\n                {\"HttpMethod\",        type text},\n                {\"StatusCode\",        Int64.Type},\n                {\"DurationMs\",        Int64.Type},\n                {\"IpAddress\",         type text},\n                {\"UserAgent\",         type text},\n                {\"ResourceTenantId\",  type text},\n                {\"OperationId\",       type text}\n            })\n        in Typed\nin\n    Result"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Application",
+        "columns": [
+          {
+            "name": "AppId",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "AppId"
+          },
+          {
+            "name": "AppDisplayName",
+            "dataType": "string",
+            "sourceColumn": "AppDisplayName"
+          },
+          {
+            "name": "ServicePrincipalType",
+            "dataType": "string",
+            "sourceColumn": "ServicePrincipalType"
+          },
+          {
+            "name": "AppOwnerTenantId",
+            "dataType": "string",
+            "sourceColumn": "AppOwnerTenantId"
+          },
+          {
+            "name": "IsExternal",
+            "dataType": "boolean",
+            "sourceColumn": "IsExternal"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Application",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    FilePath = DataFolder & \"\\graph_dim_application.csv\",\n    HasContent = try File.Contents(FilePath) otherwise null,\n    Empty = #table(\n        type table [AppId=text, AppDisplayName=text, ServicePrincipalType=text, AppOwnerTenantId=text, IsExternal=logical],\n        {}\n    ),\n    Result = if HasContent = null then Empty else\n        let\n            Source  = Csv.Document(File.Contents(FilePath), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n            Typed   = Table.TransformColumnTypes(Headers, {\n                {\"AppId\",                type text},\n                {\"AppDisplayName\",       type text},\n                {\"ServicePrincipalType\", type text},\n                {\"AppOwnerTenantId\",     type text},\n                {\"IsExternal\",           type logical}\n            })\n        in Typed\nin\n    Result"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_User",
+        "columns": [
+          {
+            "name": "UserId",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "UserId"
+          },
+          {
+            "name": "UserPrincipalName",
+            "dataType": "string",
+            "sourceColumn": "UserPrincipalName"
+          },
+          {
+            "name": "DisplayName",
+            "dataType": "string",
+            "sourceColumn": "DisplayName"
+          },
+          {
+            "name": "Department",
+            "dataType": "string",
+            "sourceColumn": "Department"
+          },
+          {
+            "name": "JobTitle",
+            "dataType": "string",
+            "sourceColumn": "JobTitle"
+          },
+          {
+            "name": "AccountEnabled",
+            "dataType": "boolean",
+            "sourceColumn": "AccountEnabled"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_User",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    FilePath = DataFolder & \"\\graph_dim_user.csv\",\n    HasContent = try File.Contents(FilePath) otherwise null,\n    Empty = #table(\n        type table [UserId=text, UserPrincipalName=text, DisplayName=text, Department=text, JobTitle=text, AccountEnabled=logical],\n        {}\n    ),\n    Result = if HasContent = null then Empty else\n        let\n            Source  = Csv.Document(File.Contents(FilePath), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n            Typed   = Table.TransformColumnTypes(Headers, {\n                {\"UserId\",            type text},\n                {\"UserPrincipalName\", type text},\n                {\"DisplayName\",       type text},\n                {\"Department\",        type text},\n                {\"JobTitle\",          type text},\n                {\"AccountEnabled\",    type logical}\n            })\n        in Typed\nin\n    Result"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Endpoint",
+        "columns": [
+          {
+            "name": "Endpoint",
+            "dataType": "string",
+            "isKey": true,
+            "sourceColumn": "Endpoint"
+          },
+          {
+            "name": "Category",
+            "dataType": "string",
+            "sourceColumn": "Category"
+          },
+          {
+            "name": "SubCategory",
+            "dataType": "string",
+            "sourceColumn": "SubCategory"
+          },
+          {
+            "name": "ApiVersion",
+            "dataType": "string",
+            "sourceColumn": "ApiVersion"
+          },
+          {
+            "name": "IsWriteOperation",
+            "dataType": "boolean",
+            "sourceColumn": "IsWriteOperation"
+          },
+          {
+            "name": "Description",
+            "dataType": "string",
+            "sourceColumn": "Description"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Endpoint",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    FilePath = DataFolder & \"\\graph_dim_endpoint.csv\",\n    HasContent = try File.Contents(FilePath) otherwise null,\n    Empty = #table(\n        type table [Endpoint=text, Category=text, SubCategory=text, ApiVersion=text, IsWriteOperation=logical, Description=text],\n        {}\n    ),\n    Result = if HasContent = null then Empty else\n        let\n            Source  = Csv.Document(File.Contents(FilePath), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),\n            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),\n            Typed   = Table.TransformColumnTypes(Headers, {\n                {\"Endpoint\",          type text},\n                {\"Category\",          type text},\n                {\"SubCategory\",       type text},\n                {\"ApiVersion\",        type text},\n                {\"IsWriteOperation\",  type logical},\n                {\"Description\",       type text}\n            })\n        in Typed\nin\n    Result"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Dim_Time",
+        "isHidden": true,
+        "columns": [
+          {
+            "type": "calculatedTableColumn",
+            "name": "Date",
+            "dataType": "dateTime",
+            "isNameInferred": false,
+            "isKey": true,
+            "sourceColumn": "[Date]",
+            "formatString": "Short Date"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Year",
+            "dataType": "int64",
+            "isNameInferred": false,
+            "sourceColumn": "[Year]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Month",
+            "dataType": "int64",
+            "isNameInferred": false,
+            "sourceColumn": "[Month]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "MonthName",
+            "dataType": "string",
+            "isNameInferred": false,
+            "sourceColumn": "[MonthName]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Day",
+            "dataType": "int64",
+            "isNameInferred": false,
+            "sourceColumn": "[Day]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Hour",
+            "dataType": "int64",
+            "isNameInferred": false,
+            "sourceColumn": "[Hour]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "DayOfWeek",
+            "dataType": "int64",
+            "isNameInferred": false,
+            "sourceColumn": "[DayOfWeek]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "DayOfWeekName",
+            "dataType": "string",
+            "isNameInferred": false,
+            "sourceColumn": "[DayOfWeekName]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "IsWeekend",
+            "dataType": "boolean",
+            "isNameInferred": false,
+            "sourceColumn": "[IsWeekend]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "YearMonth",
+            "dataType": "string",
+            "isNameInferred": false,
+            "sourceColumn": "[YearMonth]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "Quarter",
+            "dataType": "int64",
+            "isNameInferred": false,
+            "sourceColumn": "[Quarter]"
+          },
+          {
+            "type": "calculatedTableColumn",
+            "name": "YearQuarter",
+            "dataType": "string",
+            "isNameInferred": false,
+            "sourceColumn": "[YearQuarter]"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "Dim_Time",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": "ADDCOLUMNS(\n    CALENDARAUTO(),\n    \"Year\",          YEAR([Date]),\n    \"Month\",         MONTH([Date]),\n    \"MonthName\",     FORMAT([Date], \"MMMM\"),\n    \"Day\",           DAY([Date]),\n    \"Hour\",          0,\n    \"DayOfWeek\",     WEEKDAY([Date], 2),\n    \"DayOfWeekName\", FORMAT([Date], \"dddd\"),\n    \"IsWeekend\",     IF(WEEKDAY([Date], 2) >= 6, TRUE(), FALSE()),\n    \"YearMonth\",     FORMAT([Date], \"YYYY-MM\"),\n    \"Quarter\",       QUARTER([Date]),\n    \"YearQuarter\",   FORMAT([Date], \"YYYY\") & \"-Q\" & QUARTER([Date])\n)"
+            }
+          }
+        ]
+      },
+      {
+        "name": "_GraphMeasures",
+        "columns": [
+          {
+            "type": "calculatedTableColumn",
+            "name": "Marqueur",
+            "dataType": "string",
+            "isNameInferred": false,
+            "isHidden": true,
+            "sourceColumn": "[Marqueur]"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "_GraphMeasures",
+            "mode": "import",
+            "source": {
+              "type": "calculated",
+              "expression": "ROW(\"Marqueur\", \"_\")"
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total Utilisateurs Graph",
+            "expression": "COUNTROWS(GraphUsers)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Utilisateurs Actifs Graph",
+            "expression": "CALCULATE(COUNTROWS(GraphUsers), GraphUsers[accountEnabled] = TRUE())",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total Sign-Ins (7j)",
+            "expression": "COUNTROWS(GraphSignIns)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Sign-Ins Interactifs",
+            "expression": "CALCULATE(COUNTROWS(GraphSignIns), GraphSignIns[isInteractive] = TRUE())",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Sign-Ins Non Interactifs",
+            "expression": "CALCULATE(COUNTROWS(GraphSignIns), GraphSignIns[isInteractive] = FALSE())",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Apps Distinctes",
+            "expression": "DISTINCTCOUNT(GraphSignIns[appId])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total Service Principals",
+            "expression": "COUNTROWS(GraphServicePrincipals)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total API Calls",
+            "expression": "COUNTROWS(Fact_API_Calls)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total API Calls (App Only)",
+            "expression": "CALCULATE(\n    COUNTROWS(Fact_API_Calls),\n    Fact_API_Calls[UserId] = \"\"\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total API Calls (Delegated)",
+            "expression": "CALCULATE(\n    COUNTROWS(Fact_API_Calls),\n    Fact_API_Calls[UserId] <> \"\"\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Distinct Applications",
+            "expression": "DISTINCTCOUNT(Fact_API_Calls[AppId])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Distinct Users Calling API",
+            "expression": "DISTINCTCOUNT(Fact_API_Calls[UserId])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Distinct Endpoints Called",
+            "expression": "DISTINCTCOUNT(Fact_API_Calls[Endpoint])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Avg Duration (ms)",
+            "expression": "AVERAGE(Fact_API_Calls[DurationMs])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Max Duration (ms)",
+            "expression": "MAX(Fact_API_Calls[DurationMs])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "P95 Duration (ms)",
+            "expression": "PERCENTILEINC(Fact_API_Calls[DurationMs], 0.95)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total Duration (ms)",
+            "expression": "SUM(Fact_API_Calls[DurationMs])",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total Errors",
+            "expression": "CALCULATE(\n    COUNTROWS(Fact_API_Calls),\n    Fact_API_Calls[StatusCode] >= 400\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Error Rate (%)",
+            "expression": "DIVIDE(\n    CALCULATE(COUNTROWS(Fact_API_Calls), Fact_API_Calls[StatusCode] >= 400),\n    COUNTROWS(Fact_API_Calls)\n)",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "Total 4xx Errors",
+            "expression": "CALCULATE(\n    COUNTROWS(Fact_API_Calls),\n    Fact_API_Calls[StatusCode] >= 400,\n    Fact_API_Calls[StatusCode] < 500\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total 5xx Errors",
+            "expression": "CALCULATE(\n    COUNTROWS(Fact_API_Calls),\n    Fact_API_Calls[StatusCode] >= 500\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total Forbidden (403)",
+            "expression": "CALCULATE(\n    COUNTROWS(Fact_API_Calls),\n    Fact_API_Calls[StatusCode] = 403\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Total Unauthorized (401)",
+            "expression": "CALCULATE(\n    COUNTROWS(Fact_API_Calls),\n    Fact_API_Calls[StatusCode] = 401\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Write Calls (POST/PUT/PATCH/DELETE)",
+            "expression": "CALCULATE(\n    COUNTROWS(Fact_API_Calls),\n    Fact_API_Calls[HttpMethod] IN {\"POST\", \"PUT\", \"PATCH\", \"DELETE\"}\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Write Rate (%)",
+            "expression": "DIVIDE(\n    CALCULATE(\n        COUNTROWS(Fact_API_Calls),\n        Fact_API_Calls[HttpMethod] IN {\"POST\", \"PUT\", \"PATCH\", \"DELETE\"}\n    ),\n    COUNTROWS(Fact_API_Calls)\n)",
+            "formatString": "0.00%"
+          },
+          {
+            "name": "API Calls WoW Change",
+            "expression": "VAR CurrentPeriod = [Total API Calls]\nVAR PreviousPeriod =\n    CALCULATE(\n        [Total API Calls],\n        DATEADD(Dim_Time[Date], -7, DAY)\n    )\nRETURN DIVIDE(CurrentPeriod - PreviousPeriod, PreviousPeriod)",
+            "formatString": "+0.00%;-0.00%;0.00%"
+          },
+          {
+            "name": "API Calls MoM Change",
+            "expression": "VAR CurrentPeriod = [Total API Calls]\nVAR PreviousPeriod =\n    CALCULATE(\n        [Total API Calls],\n        DATEADD(Dim_Time[Date], -1, MONTH)\n    )\nRETURN DIVIDE(CurrentPeriod - PreviousPeriod, PreviousPeriod)",
+            "formatString": "+0.00%;-0.00%;0.00%"
+          },
+          {
+            "name": "Calls Last 7 Days",
+            "expression": "CALCULATE(\n    [Total API Calls],\n    DATESINPERIOD(Dim_Time[Date], LASTDATE(Dim_Time[Date]), -7, DAY)\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Calls Last 30 Days",
+            "expression": "CALCULATE(\n    [Total API Calls],\n    DATESINPERIOD(Dim_Time[Date], LASTDATE(Dim_Time[Date]), -30, DAY)\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Calls per Day (Avg)",
+            "expression": "AVERAGEX(\n    VALUES(Dim_Time[Date]),\n    [Total API Calls]\n)",
+            "formatString": "#,0.0"
+          },
+          {
+            "name": "Anomaly Score (vs Avg)",
+            "expression": "VAR DailyAvg = [Calls per Day (Avg)]\nVAR Today = [Total API Calls]\nRETURN IF(DailyAvg = 0, BLANK(), DIVIDE(Today - DailyAvg, DailyAvg))",
+            "formatString": "+0.00%;-0.00%;0.00%"
+          },
+          {
+            "name": "Top App by Calls",
+            "expression": "MAXX(\n    TOPN(1, SUMMARIZE(Fact_API_Calls, Dim_Application[AppDisplayName], \"cnt\", [Total API Calls]), [cnt]),\n    Dim_Application[AppDisplayName]\n)"
+          },
+          {
+            "name": "Top Endpoint by Calls",
+            "expression": "MAXX(\n    TOPN(1, SUMMARIZE(Fact_API_Calls, Fact_API_Calls[Endpoint], \"cnt\", [Total API Calls]), [cnt]),\n    Fact_API_Calls[Endpoint]\n)"
+          },
+          {
+            "name": "Apps with Errors",
+            "expression": "CALCULATE(\n    DISTINCTCOUNT(Fact_API_Calls[AppId]),\n    Fact_API_Calls[StatusCode] >= 400\n)",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Apps with Only Errors (%)",
+            "expression": "VAR AppsWithErrors = [Apps with Errors]\nVAR TotalApps     = [Distinct Applications]\nRETURN DIVIDE(AppsWithErrors, TotalApps)",
+            "formatString": "0.00%"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "Fact_API_Calls-Dim_Application",
+        "fromTable": "Fact_API_Calls",
+        "fromColumn": "AppId",
+        "toTable": "Dim_Application",
+        "toColumn": "AppId"
+      },
+      {
+        "name": "Fact_API_Calls-Dim_User",
+        "fromTable": "Fact_API_Calls",
+        "fromColumn": "UserId",
+        "toTable": "Dim_User",
+        "toColumn": "UserId"
+      },
+      {
+        "name": "Fact_API_Calls-Dim_Endpoint",
+        "fromTable": "Fact_API_Calls",
+        "fromColumn": "Endpoint",
+        "toTable": "Dim_Endpoint",
+        "toColumn": "Endpoint"
+      },
+      {
+        "name": "Fact_API_Calls-Dim_Time",
+        "fromTable": "Fact_API_Calls",
+        "fromColumn": "TimestampDate",
+        "toTable": "Dim_Time",
+        "toColumn": "Date"
+      }
+    ],
+    "expressions": [
+      {
+        "name": "DataFolder",
+        "kind": "m",
+        "expression": "\"C:\\Users\\Julien.SQL2022\\Desktop\\CA\\CA-GIP\\data\\graph\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]"
+      },
+      {
+        "name": "TenantId",
+        "kind": "m",
+        "expression": "\"00000000-0000-0000-0000-000000000000\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=false]"
+      },
+      {
+        "name": "ClientId",
+        "kind": "m",
+        "expression": "\"00000000-0000-0000-0000-000000000000\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=false]"
+      },
+      {
+        "name": "ClientSecret",
+        "kind": "m",
+        "expression": "\"REPLACE_WITH_SECRET\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=false]"
+      },
+      {
+        "name": "fnGetGraphToken",
+        "kind": "m",
+        "expression": "let\n    fn = (tenantId as text, clientId as text, clientSecret as text) as text =>\n    let\n        tokenUrl = \"https://login.microsoftonline.com/\" & tenantId & \"/oauth2/v2.0/token\",\n        body = \"grant_type=client_credentials\"\n            & \"&client_id=\" & clientId\n            & \"&client_secret=\" & Uri.EscapeDataString(clientSecret)\n            & \"&scope=\" & Uri.EscapeDataString(\"https://graph.microsoft.com/.default\"),\n        response = Web.Contents(\n            tokenUrl,\n            [\n                Content = Text.ToBinary(body),\n                Headers = [#\"Content-Type\" = \"application/x-www-form-urlencoded\"],\n                ManualStatusHandling = {400, 401, 403}\n            ]\n        ),\n        json = Json.Document(response),\n        token = json[access_token]\n    in\n        token\nin\n    fn"
+      },
+      {
+        "name": "fnGetGraphPaged",
+        "kind": "m",
+        "expression": "let\n    fn = (url as text, token as text) as list =>\n    let\n        FetchPage = (pageUrl as text) =>\n            let\n                response = Web.Contents(\n                    pageUrl,\n                    [\n                        Headers = [\n                            #\"Authorization\" = \"Bearer \" & token,\n                            #\"ConsistencyLevel\" = \"eventual\"\n                        ],\n                        ManualStatusHandling = {400, 401, 403, 429, 503}\n                    ]\n                ),\n                json = Json.Document(response)\n            in\n                json,\n        Pages = List.Generate(\n            () => [page = FetchPage(url)],\n            each [page] <> null,\n            each [\n                page = if Record.HasFields([page], \"@odata.nextLink\")\n                       then FetchPage(Record.Field([page], \"@odata.nextLink\"))\n                       else null\n            ],\n            each [page][value]\n        ),\n        Combined = List.Combine(Pages)\n    in\n        Combined\nin\n    fn"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"DataFolder\",\"TenantId\",\"ClientId\",\"ClientSecret\",\"fnGetGraphToken\",\"fnGetGraphPaged\",\"GraphUsers\",\"GraphSignIns\",\"GraphServicePrincipals\",\"Fact_API_Calls\",\"Dim_Application\",\"Dim_User\",\"Dim_Endpoint\",\"Dim_Time\"]"
+      }
+    ]
+  }
+}

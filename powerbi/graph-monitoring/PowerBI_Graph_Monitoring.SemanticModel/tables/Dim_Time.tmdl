@@ -1,0 +1,72 @@
+table Dim_Time
+
+	isHidden
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Short Date
+		sourceColumn: [Date]
+
+	column Year
+		dataType: int64
+		sourceColumn: [Year]
+
+	column Month
+		dataType: int64
+		sourceColumn: [Month]
+
+	column MonthName
+		dataType: string
+		sourceColumn: [MonthName]
+
+	column Day
+		dataType: int64
+		sourceColumn: [Day]
+
+	column Hour
+		dataType: int64
+		sourceColumn: [Hour]
+
+	column DayOfWeek
+		dataType: int64
+		sourceColumn: [DayOfWeek]
+
+	column DayOfWeekName
+		dataType: string
+		sourceColumn: [DayOfWeekName]
+
+	column IsWeekend
+		dataType: boolean
+		sourceColumn: [IsWeekend]
+
+	column YearMonth
+		dataType: string
+		sourceColumn: [YearMonth]
+
+	column Quarter
+		dataType: int64
+		sourceColumn: [Quarter]
+
+	column YearQuarter
+		dataType: string
+		sourceColumn: [YearQuarter]
+
+	partition Dim_Time = calculated
+		mode: import
+		source =
+				ADDCOLUMNS(
+				    CALENDARAUTO(),
+				    "Year",          YEAR([Date]),
+				    "Month",         MONTH([Date]),
+				    "MonthName",     FORMAT([Date], "MMMM"),
+				    "Day",           DAY([Date]),
+				    "Hour",          0,
+				    "DayOfWeek",     WEEKDAY([Date], 2),
+				    "DayOfWeekName", FORMAT([Date], "dddd"),
+				    "IsWeekend",     IF(WEEKDAY([Date], 2) >= 6, TRUE(), FALSE()),
+				    "YearMonth",     FORMAT([Date], "YYYY-MM"),
+				    "Quarter",       QUARTER([Date]),
+				    "YearQuarter",   FORMAT([Date], "YYYY") & "-Q" & QUARTER([Date])
+				)
+

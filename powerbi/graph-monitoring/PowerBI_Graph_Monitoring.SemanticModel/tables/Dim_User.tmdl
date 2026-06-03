@@ -1,0 +1,53 @@
+table Dim_User
+
+	column UserId
+		dataType: string
+		isKey
+		sourceColumn: UserId
+
+	column UserPrincipalName
+		dataType: string
+		sourceColumn: UserPrincipalName
+
+	column DisplayName
+		dataType: string
+		sourceColumn: DisplayName
+
+	column Department
+		dataType: string
+		sourceColumn: Department
+
+	column JobTitle
+		dataType: string
+		sourceColumn: JobTitle
+
+	column AccountEnabled
+		dataType: boolean
+		sourceColumn: AccountEnabled
+
+	partition Dim_User = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\graph_dim_user.csv",
+				    HasContent = try File.Contents(FilePath) otherwise null,
+				    Empty = #table(
+				        type table [UserId=text, UserPrincipalName=text, DisplayName=text, Department=text, JobTitle=text, AccountEnabled=logical],
+				        {}
+				    ),
+				    Result = if HasContent = null then Empty else
+				        let
+				            Source  = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed   = Table.TransformColumnTypes(Headers, {
+				                {"UserId",            type text},
+				                {"UserPrincipalName", type text},
+				                {"DisplayName",       type text},
+				                {"Department",        type text},
+				                {"JobTitle",          type text},
+				                {"AccountEnabled",    type logical}
+				            })
+				        in Typed
+				in
+				    Result
+

@@ -1,0 +1,3 @@
+expression DataFolder = "C:\Users\Julien.SQL2022\Desktop\CA\CA-GIP\data\fabric" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 4913083d-33d7-4871-9ed3-369b9e8af477
+

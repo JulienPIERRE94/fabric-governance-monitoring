@@ -1,0 +1,114 @@
+table FabricActivities
+	lineageTag: 153dd395-b420-4900-a51e-cfbe803142f5
+
+	column Id
+		dataType: string
+		lineageTag: b36105ce-848f-4a28-a412-85c95a3953fa
+		sourceColumn: Id
+
+	column CreationTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 89d863b5-350b-4297-a051-ae6bc80cf53f
+		sourceColumn: CreationTime
+
+	column Operation
+		dataType: string
+		lineageTag: c8e10aee-84dd-4328-86f1-5d5111728186
+		sourceColumn: Operation
+
+	column UserId
+		dataType: string
+		lineageTag: 9e9fa208-0430-47b7-bcaa-089a426631ab
+		sourceColumn: UserId
+
+	column UserType
+		dataType: string
+		lineageTag: c114a2d2-f97b-4169-8caa-f5e90ab3abf3
+		sourceColumn: UserType
+
+	column UserAgent
+		dataType: string
+		lineageTag: e15122e0-3816-479f-ad34-b32e1e219908
+		sourceColumn: UserAgent
+
+	column Activity
+		dataType: string
+		lineageTag: 7e2573bf-f9ec-47e2-b8a0-ddd2d52d70b5
+		sourceColumn: Activity
+
+	column ItemName
+		dataType: string
+		lineageTag: 5dc3fa93-dfb2-4527-8a6a-1571df15207a
+		sourceColumn: ItemName
+
+	column WorkspaceId
+		dataType: string
+		lineageTag: 18d99c2f-15c5-4e88-a46b-850baf51e6b7
+		sourceColumn: WorkspaceId
+
+	column WorkSpaceName
+		dataType: string
+		lineageTag: b92203af-fc7d-434e-b5eb-5e27b1d53f7a
+		sourceColumn: WorkSpaceName
+
+	column CapacityId
+		dataType: string
+		lineageTag: 37dedbd7-6b11-4ced-8387-136fd081f3f8
+		sourceColumn: CapacityId
+
+	column ObjectId
+		dataType: string
+		lineageTag: 5cc243eb-294c-4ab1-a474-02acb12de28e
+		sourceColumn: ObjectId
+
+	column DatasetName
+		dataType: string
+		lineageTag: 18b452f5-4233-4283-930a-df3aa885185d
+		sourceColumn: DatasetName
+
+	column ReportName
+		dataType: string
+		lineageTag: 6a644c7e-7d45-4b27-9340-28b39a4f331b
+		sourceColumn: ReportName
+
+	column ClientIP
+		dataType: string
+		lineageTag: 3355a5c7-57cd-41b0-a7af-e28b4109ea55
+		sourceColumn: ClientIP
+
+	partition FabricActivities = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\fabric_activities.csv",
+				    HasContent = try File.Contents(FilePath) otherwise null,
+				    Empty = #table(
+				        type table [Id=text, CreationTime=datetime, Operation=text, UserId=text, UserType=text, UserAgent=text, Activity=text, ItemName=text, WorkspaceId=text, WorkSpaceName=text, CapacityId=text, ObjectId=text, DatasetName=text, ReportName=text, ClientIP=text],
+				        {}
+				    ),
+				    Result = if HasContent = null then Empty else
+				        let
+				            Source = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed = Table.TransformColumnTypes(Headers, {
+				                {"Id", type text},
+				                {"CreationTime", type datetime},
+				                {"Operation", type text},
+				                {"UserId", type text},
+				                {"UserType", type text},
+				                {"UserAgent", type text},
+				                {"Activity", type text},
+				                {"ItemName", type text},
+				                {"WorkspaceId", type text},
+				                {"WorkSpaceName", type text},
+				                {"CapacityId", type text},
+				                {"ObjectId", type text},
+				                {"DatasetName", type text},
+				                {"ReportName", type text},
+				                {"ClientIP", type text}
+				            })
+				        in Typed
+				in
+				    Result
+

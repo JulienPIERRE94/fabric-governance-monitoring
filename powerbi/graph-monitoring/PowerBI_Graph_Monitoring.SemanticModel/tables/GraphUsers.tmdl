@@ -1,0 +1,54 @@
+table GraphUsers
+
+	column id
+		dataType: string
+		sourceColumn: id
+
+	column displayName
+		dataType: string
+		sourceColumn: displayName
+
+	column userPrincipalName
+		dataType: string
+		sourceColumn: userPrincipalName
+
+	column mail
+		dataType: string
+		sourceColumn: mail
+
+	column jobTitle
+		dataType: string
+		sourceColumn: jobTitle
+
+	column department
+		dataType: string
+		sourceColumn: department
+
+	column accountEnabled
+		dataType: boolean
+		sourceColumn: accountEnabled
+
+	partition GraphUsers = m
+		mode: import
+		source =
+				let
+				    FilePath = DataFolder & "\graph_users.csv",
+				    Empty = #table(type table [id=text, displayName=text, userPrincipalName=text, mail=text, jobTitle=text, department=text, accountEnabled=logical], {}),
+				    Result = try
+				        let
+				            Source = Csv.Document(File.Contents(FilePath), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				            Typed = Table.TransformColumnTypes(Headers, {
+				                {"id", type text},
+				                {"displayName", type text},
+				                {"userPrincipalName", type text},
+				                {"mail", type text},
+				                {"jobTitle", type text},
+				                {"department", type text},
+				                {"accountEnabled", type logical}
+				            })
+				        in Typed
+				    otherwise Empty
+				in
+				    Result
+

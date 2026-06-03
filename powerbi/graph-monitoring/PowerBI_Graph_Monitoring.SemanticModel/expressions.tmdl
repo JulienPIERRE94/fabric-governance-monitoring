@@ -1,0 +1,66 @@
+expression DataFolder = "C:\Users\Julien.SQL2022\Desktop\CA\CA-GIP\data\graph" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+
+expression TenantId = "00000000-0000-0000-0000-000000000000" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]
+
+expression ClientId = "00000000-0000-0000-0000-000000000000" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]
+
+expression ClientSecret = "REPLACE_WITH_SECRET" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]
+
+expression fnGetGraphToken =
+		let
+		    fn = (tenantId as text, clientId as text, clientSecret as text) as text =>
+		    let
+		        tokenUrl = "https://login.microsoftonline.com/" & tenantId & "/oauth2/v2.0/token",
+		        body = "grant_type=client_credentials"
+		            & "&client_id=" & clientId
+		            & "&client_secret=" & Uri.EscapeDataString(clientSecret)
+		            & "&scope=" & Uri.EscapeDataString("https://graph.microsoft.com/.default"),
+		        response = Web.Contents(
+		            tokenUrl,
+		            [
+		                Content = Text.ToBinary(body),
+		                Headers = [#"Content-Type" = "application/x-www-form-urlencoded"],
+		                ManualStatusHandling = {400, 401, 403}
+		            ]
+		        ),
+		        json = Json.Document(response),
+		        token = json[access_token]
+		    in
+		        token
+		in
+		    fn
+
+expression fnGetGraphPaged =
+		let
+		    fn = (url as text, token as text) as list =>
+		    let
+		        FetchPage = (pageUrl as text) =>
+		            let
+		                response = Web.Contents(
+		                    pageUrl,
+		                    [
+		                        Headers = [
+		                            #"Authorization" = "Bearer " & token,
+		                            #"ConsistencyLevel" = "eventual"
+		                        ],
+		                        ManualStatusHandling = {400, 401, 403, 429, 503}
+		                    ]
+		                ),
+		                json = Json.Document(response)
+		            in
+		                json,
+		        Pages = List.Generate(
+		            () => [page = FetchPage(url)],
+		            each [page] <> null,
+		            each [
+		                page = if Record.HasFields([page], "@odata.nextLink")
+		                       then FetchPage(Record.Field([page], "@odata.nextLink"))
+		                       else null
+		            ],
+		            each [page][value]
+		        ),
+		        Combined = List.Combine(Pages)
+		    in
+		        Combined
+		in
+		    fn
